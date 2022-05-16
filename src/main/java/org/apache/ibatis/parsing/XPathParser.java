@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2021 the original author or authors.
+ *    Copyright 2009-2022 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.apache.ibatis.parsing;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
@@ -31,6 +32,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.ibatis.builder.BuilderException;
+import org.apache.ibatis.io.Resources;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -45,13 +47,13 @@ import org.xml.sax.SAXParseException;
  * @author Kazuki Shimizu
  */
 public class XPathParser {
+  private final Document document; // 代表一个文档对象
+  private boolean validation; // 是否开启校验
+  private EntityResolver entityResolver; // 用来加载本地dtd文件
+  private Properties variables;   // xml中<properties>对应的键值对
+  private XPath xpath;  // 主要属性，用来从xml中根据表达式来获取相应的值，相当于用来查询xml的sql
 
-  private final Document document;
-  private boolean validation;
-  private EntityResolver entityResolver;
-  private Properties variables;
-  private XPath xpath;
-
+  //输入为一个xml格式的string
   public XPathParser(String xml) {
     commonConstructor(false, null, null);
     this.document = createDocument(new InputSource(new StringReader(xml)));
@@ -141,7 +143,7 @@ public class XPathParser {
   }
 
   public String evalString(Object root, String expression) {
-    String result = (String) evaluate(expression, root, XPathConstants.STRING);
+    String result = (String) evaluate(expression, root, XPathConstants.STRING); // 调用xpath来进行解析
     result = PropertyParser.parse(result, variables);
     return result;
   }
@@ -235,12 +237,14 @@ public class XPathParser {
       factory.setValidating(validation);
 
       factory.setNamespaceAware(false);
-      factory.setIgnoringComments(true);
+      factory.setIgnoringComments(true); //忽略注释
       factory.setIgnoringElementContentWhitespace(false);
-      factory.setCoalescing(false);
-      factory.setExpandEntityReferences(true);
+      factory.setCoalescing(false); //把 CDATA 节点转换为 Text 节点
+      factory.setExpandEntityReferences(true); //扩展实体引用
 
       DocumentBuilder builder = factory.newDocumentBuilder();
+      //定义了EntityResolver(XMLMapperEntityResolver)，这样不用联网去获取DTD，
+      //将DTD放在org\apache\ibatis\builder\xml\mybatis-3-config.dtd, 来达到验证xml合法性的目的
       builder.setEntityResolver(entityResolver);
       builder.setErrorHandler(new ErrorHandler() {
         @Override
@@ -258,7 +262,7 @@ public class XPathParser {
           // NOP
         }
       });
-      return builder.parse(inputSource);
+      return builder.parse(inputSource); //至此,把一个普通流资源转化为一个Dom文档流
     } catch (Exception e) {
       throw new BuilderException("Error creating document instance.  Cause: " + e, e);
     }

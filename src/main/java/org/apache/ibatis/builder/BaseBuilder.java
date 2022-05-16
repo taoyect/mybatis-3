@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2021 the original author or authors.
+ *    Copyright 2009-2022 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -32,8 +32,13 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Clinton Begin
  */
 public abstract class BaseBuilder {
+  //MyBatis 的初始化过程就是围绕 Configuration 对象展开的，我们可以认为 Configuration 是一个单例对象，
+  //MyBatis 初始化解析到的全部配置信息都会记录到 Configuration 对象中。
   protected final Configuration configuration;
-  protected final TypeAliasRegistry typeAliasRegistry;
+  protected final TypeAliasRegistry typeAliasRegistry;  //别名注册中心
+  //TypeHandler 注册中心。除了定义别名之外，我们在 mybatis-config.xml 配置文件中，
+  // 还可以使用 <typeHandlers> 标签添加自定义 TypeHandler 实现，实现数据库类型与 Java 类型的自定义转换，
+  // 这些自定义的 TypeHandler 都会记录在这个 TypeHandlerRegistry 对象中。
   protected final TypeHandlerRegistry typeHandlerRegistry;
 
   public BaseBuilder(Configuration configuration) {
@@ -132,6 +137,12 @@ public abstract class BaseBuilder {
     return resolveTypeHandler(javaType, typeHandlerType);
   }
 
+  /**
+   * 基本能力：解析 TypeHandler
+   * @param javaType
+   * @param typeHandlerType
+   * 内部委派给 TypeHandlerRegistry 对象 来实现
+   */
   protected TypeHandler<?> resolveTypeHandler(Class<?> javaType, Class<? extends TypeHandler<?>> typeHandlerType) {
     if (typeHandlerType == null) {
       return null;
@@ -145,6 +156,10 @@ public abstract class BaseBuilder {
     return handler;
   }
 
+  /**
+   * 基本能力：解析别名
+   * 内部委派给 TypeAliasRegistry 对象来实现
+   */
   protected <T> Class<? extends T> resolveAlias(String alias) {
     return typeAliasRegistry.resolveAlias(alias);
   }

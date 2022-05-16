@@ -52,10 +52,11 @@ import org.apache.ibatis.type.JdbcType;
  * @author Kazuki Shimizu
  */
 public class XMLConfigBuilder extends BaseBuilder {
-
+  // 状态标识字段，记录当前 XMLConfigBuilder 对象是否已经成功解析完 mybatis-config.xml 配置文件
   private boolean parsed;
-  private final XPathParser parser;
-  private String environment;
+  private final XPathParser parser; //XML 解析器，这里的 parser 对象就是用来解析 mybatis-config.xml 配置文件的
+  private String environment;  //标签定义的环境名称
+  //ReflectorFactory 接口的核心功能是实现对 Reflector 对象的创建和缓存。
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
   public XMLConfigBuilder(Reader reader) {
@@ -127,10 +128,13 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context == null) {
       return new Properties();
     }
+    // 处理<settings>所有子节点<setting>，将其name属性和value属性，整理到Properties对象中保存
     Properties props = context.getChildrenAsProperties();
     // Check that all settings are known to the configuration class
+    // 创建Configuration对应的MetaClass对象 ？？
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
     for (Object key : props.keySet()) {
+      // 检测Configuration对象中是否包含每个配置项的setter方法
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException("The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
       }

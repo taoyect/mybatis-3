@@ -29,14 +29,15 @@ import org.w3c.dom.NodeList;
 
 /**
  * @author Clinton Begin
+ * XNode是MyBatis对 Node的包装，Node是w3c标准DOM中定义的节点，XNode的重点是能处理属性及文本中的${}占位符
  */
 public class XNode {
 
-  private final Node node;
+  private final Node node;  //所包装的Node对象
   private final String name;
   private final String body;
-  private final Properties attributes;
-  private final Properties variables;
+  private final Properties attributes;  // 节点的属性对象
+  private final Properties variables;   //外部传入的属性对象
   private final XPathParser xpathParser;
 
   public XNode(XPathParser xpathParser, Node node, Properties variables) {
@@ -44,8 +45,8 @@ public class XNode {
     this.node = node;
     this.name = node.getNodeName();
     this.variables = variables;
-    this.attributes = parseAttributes(node);
-    this.body = parseBody(node);
+    this.attributes = parseAttributes(node); // 处理了属性中的${}
+    this.body = parseBody(node);// 处理了文本中的${}, 处理时都是使用PropertyParser.parse方法
   }
 
   public XNode newXNode(Node node) {
