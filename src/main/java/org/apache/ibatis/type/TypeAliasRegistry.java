@@ -121,7 +121,7 @@ public class TypeAliasRegistry {
       if (typeAliases.containsKey(key)) {
         value = (Class<T>) typeAliases.get(key);
       } else {
-        value = (Class<T>) Resources.classForName(string);
+        value = (Class<T>) Resources.classForName(string); //Loads a class
       }
       return value;
     } catch (ClassNotFoundException e) {

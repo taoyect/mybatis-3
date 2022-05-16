@@ -106,7 +106,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       // issue #117 read properties first
       propertiesElement(root.evalNode("properties"));
       Properties settings = settingsAsProperties(root.evalNode("settings"));
-      loadCustomVfs(settings);
+      loadCustomVfs(settings);  //加载自定义的VFS
       loadCustomLogImpl(settings);
       typeAliasesElement(root.evalNode("typeAliases"));
       pluginElement(root.evalNode("plugins"));
@@ -156,6 +156,17 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * value不区分大小写，常用如下。也可配置自定义的org.apache.ibatis.logging.Log实现类，放于classpath下
+   * slf4j -> 	 "class org.apache.ibatis.logging.slf4j.Slf4jImpl"
+   * log4j (deprecated since 3.5.9)  -> "class org.apache.ibatis.logging.log4j.Log4jImpl"
+   * log4j2 ->  "class org.apache.ibatis.logging.log4j2.Log4j2Impl"
+   * jdk_logging -> "class org.apache.ibatis.logging.jdk14.Jdk14LoggingImpl"
+   * commons_logging -> "class org.apache.ibatis.logging.commons.JakartaCommonsLoggingImpl"
+   * stdout_logging ->  "class org.apache.ibatis.logging.stdout.StdOutImpl"
+   * no_logging -> "class org.apache.ibatis.logging.nologging.NoLoggingImpl"
+   * @param props
+   */
   private void loadCustomLogImpl(Properties props) {
     Class<? extends Log> logImpl = resolveClass(props.getProperty("logImpl"));
     configuration.setLogImpl(logImpl);
