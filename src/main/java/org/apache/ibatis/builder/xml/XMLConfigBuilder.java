@@ -175,15 +175,20 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //解析 <package name="packageName"/>
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
+          //注册包路径名packageName下的类到typeAliasRegistry的Map中 <key, value>
+            //  如果类中使用了注解org.apache.ibatis.type.Alias显式给出了“别名”，优先选用该别名为key
+            //  否则以类的simpleName的toLowerCase为key，类的全路径名为value
+          //Ignore inner classes and interfaces (including package-info.java)
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
           String alias = child.getStringAttribute("alias");
           String type = child.getStringAttribute("type");
           try {
             Class<?> clazz = Resources.classForName(type);
-            if (alias == null) {
+            if (alias == null) { //若没有设置alias属性，注册到map中时<key, value>的选取同package配置
               typeAliasRegistry.registerAlias(clazz);
             } else {
               typeAliasRegistry.registerAlias(alias, clazz);
