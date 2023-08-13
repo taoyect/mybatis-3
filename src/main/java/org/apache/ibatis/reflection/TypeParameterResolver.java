@@ -64,6 +64,13 @@ public class TypeParameterResolver {
     return result;
   }
 
+  /**
+   *
+   * @param type
+   * @param srcType 一般是目标Class
+   * @param declaringClass type真实所在的类，如存在继承关系时，子类的方法可能仅在父类中定义
+   * @return
+   */
   private static Type resolveType(Type type, Type srcType, Class<?> declaringClass) {
     if (type instanceof TypeVariable) {
       return resolveTypeVar((TypeVariable<?>) type, srcType, declaringClass);
@@ -148,7 +155,7 @@ public class TypeParameterResolver {
     if (clazz == declaringClass) {
       Type[] bounds = typeVar.getBounds();
       if (bounds.length > 0) {
-        return bounds[0];
+        return bounds[0]; // 仅返回最近的上界
       }
       return Object.class;
     }

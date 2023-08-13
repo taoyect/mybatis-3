@@ -36,7 +36,8 @@ public final class PropertyNamer {
     } else {
       throw new ReflectionException("Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
     }
-
+    //1. 如果name.length == 0, 则直接返回""
+    //2. 如果name.length() > 1 且 name满足第二个字符是大写 --> e.g. CName, 则直接返回CName
     if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
       name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
     }

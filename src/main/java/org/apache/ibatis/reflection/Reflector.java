@@ -45,16 +45,25 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  * @author Clinton Begin
  */
 public class Reflector {
-//
-  private final Class<?> type;
+  private final Class<?> type;  //该 Reflector 对象封装的 Class 类型
+  //可读、可写属性的名称集合
   private final String[] readablePropertyNames;
   private final String[] writablePropertyNames;
-  private final Map<String, Invoker> setMethods = new HashMap<>();
+
+  //可读、可写属性对应的 getter 方法和 setter 方法集合，
+  // key 是属性的名称，value 是一个 Invoker 对象。Invoker 是对 Method 对象的封装。
   private final Map<String, Invoker> getMethods = new HashMap<>();
-  private final Map<String, Class<?>> setTypes = new HashMap<>();
+  private final Map<String, Invoker> setMethods = new HashMap<>();
+
+  //属性对应的 getter 方法返回值 以及 setter 方法的参数值类型
+  // key 是属性名称，value 是方法的返回值类型或参数类型。
   private final Map<String, Class<?>> getTypes = new HashMap<>();
+  private final Map<String, Class<?>> setTypes = new HashMap<>();
+
+  //默认无参构造方法。constructor.getParameterTypes().length == 0
   private Constructor<?> defaultConstructor;
 
+  //所有属性名称的集合，记录到这个集合中的属性名称都是大写的。
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
   public Reflector(Class<?> clazz) {
@@ -86,7 +95,7 @@ public class Reflector {
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
     Method[] methods = getClassMethods(cls);
     for (Method method : methods) {
-      if (method.getParameterTypes().length > 0) {
+      if (method.getParameterTypes().length > 0) {  //只会保留方法参数个数=0的
         continue;
       }
       String name = method.getName();
@@ -99,6 +108,12 @@ public class Reflector {
     resolveGetterConflicts(conflictingGetters);
   }
 
+  /**
+   * Map<String, List<Method>> conflictingGetters
+   * key : propName, value: "返回值#名字:参数1的全限定类名, ..., 参数N的全限定类名"过滤出来的全部方法
+   *
+   * 主要是处理“返回值 < 父类”的继承方法对，保留子类中的，丢弃父类中的
+   */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
@@ -134,6 +149,14 @@ public class Reflector {
     }
   }
 
+  public static void main(String[] args) throws NoSuchMethodException {
+    Class<Reflector> reflectorClass = Reflector.class;
+    Method addGetMethod = reflectorClass.getDeclaredMethod("addGetMethod", String.class, Method.class);
+//    addGetMethod.setAccessible(true);
+    Class<?> declaringClass = addGetMethod.getDeclaringClass();
+    System.out.println(declaringClass.getName());
+  }
+
   private void addGetMethod(String name, Method method) {
     if (isValidPropertyName(name)) {
       getMethods.put(name, new MethodInvoker(method));
@@ -158,6 +181,9 @@ public class Reflector {
   }
 
   private void addMethodConflict(Map<String, List<Method>> conflictingMethods, String name, Method method) {
+    //computeIfAbsent(K key, Function remappingFunction)
+    //如果 key 对应的 value 不存在，则使用获取 remappingFunction 重新计算后的值，并保存为该 key 的 value，
+    // 否则返回已经存在于Map中的value
     List<Method> list = conflictingMethods.computeIfAbsent(name, k -> new ArrayList<>());
     list.add(method);
   }
