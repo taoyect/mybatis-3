@@ -264,6 +264,9 @@ public class Reflector {
     return result;
   }
 
+  /**
+   * 处理没有 getter/setter 方法的字段
+   */
   private void addFields(Class<?> clazz) {
     Field[] fields = clazz.getDeclaredFields();
     for (Field field : fields) {
