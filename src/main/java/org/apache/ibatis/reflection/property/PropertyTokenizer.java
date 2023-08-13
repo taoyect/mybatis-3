@@ -19,6 +19,7 @@ import java.util.Iterator;
 
 /**
  * @author Clinton Begin
+ * https://blog.csdn.net/seasonsbin/article/details/116998082
  *
  * 属性分词器
  *
