@@ -45,7 +45,7 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  * @author Clinton Begin
  */
 public class Reflector {
-
+//
   private final Class<?> type;
   private final String[] readablePropertyNames;
   private final String[] writablePropertyNames;
