@@ -28,12 +28,19 @@ import org.w3c.dom.NodeList;
 
 /**
  * @author Clinton Begin
+ *
+ *            <dataSource type="POOLED">
+ *                 <property name="driver" value="${jdbc.driver}"/>
+ *                 <property name="url" value="${jdbc.url}"/>
+ *                 <property name="username" value="${jdbc.username}"/>
+ *                 <property name="password" value="${jdbc.password}"/>
+ *             </dataSource>
  */
 public class XNode {
 
   private final Node node;                //org.w3c.dorn.Node对象
-  private final String name;              //Node节点名称
-  private final String body;              //节点的内容
+  private final String name;              //Node节点名称, e.g. //dataSource/property/@value 时，为 value
+  private final String body;              //节点的内容，e.g. //dataSource/property/@value 时，为 ${jdbc.driver}
   /**
    * 该节点属性的集合
    * e.g.
