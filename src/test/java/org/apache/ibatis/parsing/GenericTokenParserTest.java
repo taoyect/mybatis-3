@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2019 the original author or authors.
+/*
+ *    Copyright 2009-2021 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@ package org.apache.ibatis.parsing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 class GenericTokenParserTest {
 
@@ -86,10 +86,10 @@ class GenericTokenParserTest {
     assertEquals("The null is ${skipped} variable", parser.parse("The ${skipped} is \\${skipped} variable"));
   }
 
-  @Disabled("Because it randomly fails on Travis CI. It could be useful during development.")
+  @Disabled("Because it randomly fails on Github CI. It could be useful during development.")
   @Test
   void shouldParseFastOnJdk7u6() {
-    Assertions.assertTimeout(Duration.ofMillis(1), () -> {
+    Assertions.assertTimeout(Duration.ofMillis(1000), () -> {
       // issue #760
       GenericTokenParser parser = new GenericTokenParser("${", "}", new VariableTokenHandler(new HashMap<String, String>() {
         {

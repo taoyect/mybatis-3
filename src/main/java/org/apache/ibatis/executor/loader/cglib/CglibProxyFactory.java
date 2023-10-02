@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2018 the original author or authors.
+/*
+ *    Copyright 2009-2022 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.apache.ibatis.executor.loader.cglib;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import net.sf.cglib.proxy.Callback;
@@ -42,7 +41,9 @@ import org.apache.ibatis.session.Configuration;
 
 /**
  * @author Clinton Begin
+ * @deprecated Since 3.5.10, use Javassist instead.
  */
+@Deprecated
 public class CglibProxyFactory implements ProxyFactory {
 
   private static final String FINALIZE_METHOD = "finalize";
@@ -65,12 +66,8 @@ public class CglibProxyFactory implements ProxyFactory {
     return EnhancedDeserializationProxyImpl.createProxy(target, unloadedProperties, objectFactory, constructorArgTypes, constructorArgs);
   }
 
-  @Override
-  public void setProperties(Properties properties) {
-      // Not Implemented
-  }
-
   static Object crateProxy(Class<?> type, Callback callback, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+    LogHolder.log.warn("CglibProxyFactory is deprecated. Use another proxy factory implementation.");
     Enhancer enhancer = new Enhancer();
     enhancer.setCallback(callback);
     enhancer.setSuperclass(type);
@@ -81,7 +78,7 @@ public class CglibProxyFactory implements ProxyFactory {
         LogHolder.log.debug(WRITE_REPLACE_METHOD + " method was found on bean " + type + ", make sure it returns this");
       }
     } catch (NoSuchMethodException e) {
-      enhancer.setInterfaces(new Class[]{WriteReplaceInterface.class});
+      enhancer.setInterfaces(new Class[] { WriteReplaceInterface.class });
     } catch (SecurityException e) {
       // nothing to do here
     }

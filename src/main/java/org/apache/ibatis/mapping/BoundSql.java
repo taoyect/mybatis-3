@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2019 the original author or authors.
+/*
+ *    Copyright 2009-2021 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.apache.ibatis.session.Configuration;
 
 /**
  * An actual SQL String got from an {@link SqlSource} after having processed any dynamic content.
- * The SQL may have SQL placeholders "?" and an list (ordered) of an parameter mappings
+ * The SQL may have SQL placeholders "?" and a list (ordered) of a parameter mappings
  * with the additional information for each parameter (at least the property name of the input object to read
  * the value from).
  * <p>
@@ -35,11 +35,11 @@ import org.apache.ibatis.session.Configuration;
  */
 public class BoundSql {
 
-  private final String sql;
-  private final List<ParameterMapping> parameterMappings;
-  private final Object parameterObject;
+  private final String sql; // 最终解析的sql，Mybatis将#{}和${}解析后的sql，其中#{}会被解析为?
+  private final List<ParameterMapping> parameterMappings; // 参数映射
+  private final Object parameterObject; // 参数对象
   private final Map<String, Object> additionalParameters;
-  private final MetaObject metaParameters;
+  private final MetaObject metaParameters;  // 元数据参数
 
   public BoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject) {
     this.sql = sql;

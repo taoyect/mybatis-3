@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2019 the original author or authors.
+/*
+ *    Copyright 2009-2022 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ import org.xml.sax.SAXException;
  * @author Eduardo Macarron
  */
 public class XMLMapperEntityResolver implements EntityResolver {
-
+  // config.dtd是mybatis-config.xml的dtd文件，mapper.dtd是****Mapper.xml的dtd文件
+  // dtd文件规定了在xml中能够出现哪些标签，并且标签的取值情况等
   private static final String IBATIS_CONFIG_SYSTEM = "ibatis-3-config.dtd";
   private static final String IBATIS_MAPPER_SYSTEM = "ibatis-3-mapper.dtd";
   private static final String MYBATIS_CONFIG_SYSTEM = "mybatis-3-config.dtd";
@@ -43,17 +44,21 @@ public class XMLMapperEntityResolver implements EntityResolver {
   /**
    * Converts a public DTD into a local one.
    *
-   * @param publicId The public id that is what comes after "PUBLIC"
-   * @param systemId The system id that is what comes after the public id.
+   * @param publicId
+   *          The public id that is what comes after "PUBLIC"
+   * @param systemId
+   *          The system id that is what comes after the public id.
    * @return The InputSource for the DTD
    *
-   * @throws org.xml.sax.SAXException If anything goes wrong
+   * @throws org.xml.sax.SAXException
+   *           If anything goes wrong
    */
   @Override
   public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
     try {
       if (systemId != null) {
         String lowerCaseSystemId = systemId.toLowerCase(Locale.ENGLISH);
+        // 从这里可以看出当需要读取指定的dtd文件时，会读取本地的dtd文件
         if (lowerCaseSystemId.contains(MYBATIS_CONFIG_SYSTEM) || lowerCaseSystemId.contains(IBATIS_CONFIG_SYSTEM)) {
           return getInputSource(MYBATIS_CONFIG_DTD, publicId, systemId);
         } else if (lowerCaseSystemId.contains(MYBATIS_MAPPER_SYSTEM) || lowerCaseSystemId.contains(IBATIS_MAPPER_SYSTEM)) {

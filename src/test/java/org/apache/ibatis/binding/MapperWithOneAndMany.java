@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2019 the original author or authors.
+/*
+ *    Copyright 2009-2021 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public interface MapperWithOneAndMany {
     @Result(
        property = "author", column = "author_id",
        one = @One(select = "org.apache.ibatis.binding.BoundAuthorMapper.selectAuthor"),
-       many = @Many(select = "selectPostsById"))
+       many = @Many(select = "org.apache.ibatis.binding.BoundBlogMapper.selectPostsById"))
   })
   List<Blog> selectWithBothOneAndMany();
 

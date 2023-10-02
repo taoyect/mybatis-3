@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2019 the original author or authors.
+/*
+ *    Copyright 2009-2022 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,6 +14,14 @@
  *    limitations under the License.
  */
 package org.apache.ibatis.builder;
+
+import static com.googlecode.catchexception.apis.BDDCatchException.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 import java.io.StringReader;
@@ -41,6 +49,7 @@ import org.apache.ibatis.io.JBoss6VFS;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.logging.slf4j.Slf4jImpl;
 import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.mapping.ResultSetType;
 import org.apache.ibatis.scripting.defaults.RawLanguageDriver;
 import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.AutoMappingBehavior;
@@ -55,15 +64,8 @@ import org.apache.ibatis.type.EnumTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
-import static com.googlecode.catchexception.apis.BDDCatchException.*;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class XmlConfigBuilderTest {
 
@@ -86,6 +88,7 @@ class XmlConfigBuilderTest {
       assertThat(config.getDefaultExecutorType()).isEqualTo(ExecutorType.SIMPLE);
       assertNull(config.getDefaultStatementTimeout());
       assertNull(config.getDefaultFetchSize());
+      assertNull(config.getDefaultResultSetType());
       assertThat(config.isMapUnderscoreToCamelCase()).isFalse();
       assertThat(config.isSafeRowBoundsEnabled()).isFalse();
       assertThat(config.getLocalCacheScope()).isEqualTo(LocalCacheScope.SESSION);
@@ -98,6 +101,10 @@ class XmlConfigBuilderTest {
       assertNull(config.getLogImpl());
       assertNull(config.getConfigurationFactory());
       assertThat(config.getTypeHandlerRegistry().getTypeHandler(RoundingMode.class)).isInstanceOf(EnumTypeHandler.class);
+      assertThat(config.isShrinkWhitespacesInSql()).isFalse();
+      assertThat(config.isArgNameBasedConstructorAutoMapping()).isFalse();
+      assertThat(config.getDefaultSqlProviderType()).isNull();
+      assertThat(config.isNullableOnForEach()).isFalse();
     }
   }
 
@@ -158,6 +165,7 @@ class XmlConfigBuilderTest {
     assertArrayEquals(MyEnum.values(), ((EnumOrderTypeHandler<MyEnum>) typeHandler).constants);
   }
 
+  @Tag("RequireIllegalAccess")
   @Test
   void shouldSuccessfullyLoadXMLConfigFile() throws Exception {
     String resource = "org/apache/ibatis/builder/CustomizedSettingsMapperConfig.xml";
@@ -179,6 +187,7 @@ class XmlConfigBuilderTest {
       assertThat(config.getDefaultExecutorType()).isEqualTo(ExecutorType.BATCH);
       assertThat(config.getDefaultStatementTimeout()).isEqualTo(10);
       assertThat(config.getDefaultFetchSize()).isEqualTo(100);
+      assertThat(config.getDefaultResultSetType()).isEqualTo(ResultSetType.SCROLL_INSENSITIVE);
       assertThat(config.isMapUnderscoreToCamelCase()).isTrue();
       assertThat(config.isSafeRowBoundsEnabled()).isTrue();
       assertThat(config.getLocalCacheScope()).isEqualTo(LocalCacheScope.STATEMENT);
@@ -191,6 +200,10 @@ class XmlConfigBuilderTest {
       assertThat(config.getLogImpl().getName()).isEqualTo(Slf4jImpl.class.getName());
       assertThat(config.getVfsImpl().getName()).isEqualTo(JBoss6VFS.class.getName());
       assertThat(config.getConfigurationFactory().getName()).isEqualTo(String.class.getName());
+      assertThat(config.isShrinkWhitespacesInSql()).isTrue();
+      assertThat(config.isArgNameBasedConstructorAutoMapping()).isTrue();
+      assertThat(config.getDefaultSqlProviderType().getName()).isEqualTo(MySqlProvider.class.getName());
+      assertThat(config.isNullableOnForEach()).isTrue();
 
       assertThat(config.getTypeAliasRegistry().getTypeAliases().get("blogauthor")).isEqualTo(Author.class);
       assertThat(config.getTypeAliasRegistry().getTypeAliases().get("blog")).isEqualTo(Blog.class);
@@ -247,7 +260,7 @@ class XmlConfigBuilderTest {
       XMLConfigBuilder builder = new XMLConfigBuilder(inputStream);
       builder.parse();
 
-      when(builder).parse();
+      when(builder::parse);
       then(caughtException()).isInstanceOf(BuilderException.class)
               .hasMessage("Each XMLConfigBuilder can only be used once.");
     }
@@ -264,7 +277,7 @@ class XmlConfigBuilderTest {
             + "</configuration>\n";
 
     XMLConfigBuilder builder = new XMLConfigBuilder(new StringReader(MAPPER_CONFIG));
-    when(builder).parse();
+    when(builder::parse);
     then(caughtException()).isInstanceOf(BuilderException.class)
       .hasMessageContaining("The setting foo is not known.  Make sure you spelled it correctly (case sensitive).");
   }
@@ -280,7 +293,7 @@ class XmlConfigBuilderTest {
             + "</configuration>\n";
 
     XMLConfigBuilder builder = new XMLConfigBuilder(new StringReader(MAPPER_CONFIG));
-    when(builder).parse();
+    when(builder::parse);
     then(caughtException()).isInstanceOf(BuilderException.class)
       .hasMessageContaining("Error registering typeAlias for 'null'. Cause: ");
   }
@@ -294,9 +307,16 @@ class XmlConfigBuilderTest {
             + "</configuration>\n";
 
     XMLConfigBuilder builder = new XMLConfigBuilder(new StringReader(MAPPER_CONFIG));
-    when(builder).parse();
+    when(builder::parse);
     then(caughtException()).isInstanceOf(BuilderException.class)
       .hasMessageContaining("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
+  }
+
+  static class MySqlProvider {
+    @SuppressWarnings("unused")
+    public static String provideSql() {
+      return "SELECT 1";
+    }
   }
 
 }

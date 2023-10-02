@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2019 the original author or authors.
+/*
+ *    Copyright 2009-2021 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,7 +15,12 @@
  */
 package org.apache.ibatis.submitted.foreach;
 
+import static com.googlecode.catchexception.apis.BDDCatchException.*;
+import static org.assertj.core.api.BDDAssertions.then;
+
+import java.io.IOException;
 import java.io.Reader;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,9 +35,6 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import static com.googlecode.catchexception.apis.BDDCatchException.*;
-import static org.assertj.core.api.BDDAssertions.then;
 
 class ForEachTest {
 
@@ -115,7 +117,7 @@ class ForEachTest {
   void shouldReportMissingPropertyName() {
     try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
       Mapper mapper = sqlSession.getMapper(Mapper.class);
-      when(mapper).typoInItemProperty(Collections.singletonList(new User()));
+      when(() -> mapper.typoInItemProperty(Collections.singletonList(new User())));
       then(caughtException()).isInstanceOf(PersistenceException.class)
         .hasMessageContaining("There is no getter for property named 'idd' in 'class org.apache.ibatis.submitted.foreach.User'");
     }
@@ -136,6 +138,78 @@ class ForEachTest {
       Mapper mapper = sqlSession.getMapper(Mapper.class);
       int result = mapper.indexVariableConflict(4, Arrays.asList(6, 7), Arrays.asList(8, 9));
       Assertions.assertEquals(4, result);
+    }
+  }
+
+  @Test
+  void shouldAllowNullWhenAttributeIsOmitAndConfigurationIsDefault() throws IOException, SQLException {
+    SqlSessionFactory sqlSessionFactory;
+    try (Reader reader = Resources.getResourceAsReader("org/apache/ibatis/submitted/foreach/mybatis-config.xml")) {
+      sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+    }
+    BaseDataTest.runScript(sqlSessionFactory.getConfiguration().getEnvironment().getDataSource(),
+      "org/apache/ibatis/submitted/foreach/CreateDB.sql");
+
+    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+      Mapper mapper = sqlSession.getMapper(Mapper.class);
+      User user = new User();
+      user.setFriendList(null);
+      mapper.countUserWithNullableIsOmit(user);
+      Assertions.fail();
+    } catch (PersistenceException e) {
+      Assertions.assertEquals("The expression 'friendList' evaluated to a null value.", e.getCause().getMessage());
+    }
+  }
+
+  @Test
+  void shouldAllowNullWhenAttributeIsOmitAndConfigurationIsTrue() {
+    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+      sqlSessionFactory.getConfiguration().setNullableOnForEach(true);
+      Mapper mapper = sqlSession.getMapper(Mapper.class);
+      User user = new User();
+      user.setFriendList(null);
+      int result = mapper.countUserWithNullableIsOmit(user);
+      Assertions.assertEquals(6, result);
+    }
+  }
+
+  @Test
+  void shouldNotAllowNullWhenAttributeIsOmitAndConfigurationIsFalse() {
+    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+      sqlSessionFactory.getConfiguration().setNullableOnForEach(false);
+      Mapper mapper = sqlSession.getMapper(Mapper.class);
+      User user = new User();
+      user.setFriendList(null);
+      mapper.countUserWithNullableIsOmit(user);
+      Assertions.fail();
+    } catch (PersistenceException e) {
+      Assertions.assertEquals("The expression 'friendList' evaluated to a null value.", e.getCause().getMessage());
+    }
+  }
+
+  @Test
+  void shouldAllowNullWhenAttributeIsTrueAndConfigurationIsFalse() {
+    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+      sqlSessionFactory.getConfiguration().setNullableOnForEach(false);
+      Mapper mapper = sqlSession.getMapper(Mapper.class);
+      User user = new User();
+      user.setFriendList(null);
+      int result = mapper.countUserWithNullableIsTrue(user);
+      Assertions.assertEquals(6, result);
+    }
+  }
+
+  @Test
+  void shouldNotAllowNullWhenAttributeIsFalseAndConfigurationIsTrue() {
+    try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+      sqlSessionFactory.getConfiguration().setNullableOnForEach(true);
+      Mapper mapper = sqlSession.getMapper(Mapper.class);
+      User user = new User();
+      user.setFriendList(null);
+      mapper.countUserWithNullableIsFalse(user);
+      Assertions.fail();
+    } catch (PersistenceException e) {
+      Assertions.assertEquals("The expression 'friendList' evaluated to a null value.", e.getCause().getMessage());
     }
   }
 

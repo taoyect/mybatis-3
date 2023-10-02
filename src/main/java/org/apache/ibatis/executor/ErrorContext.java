@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2018 the original author or authors.
+/*
+ *    Copyright 2009-2021 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ public class ErrorContext {
    *
    * 也是换行符,功能和"\n"是一致的,但是此种写法屏蔽了 Windows和Linux的区别 ，更保险一些
    */
-  private static final String LINE_SEPARATOR = System.getProperty("line.separator","\n");
-  private static final ThreadLocal<ErrorContext> LOCAL = new ThreadLocal<>();
+  private static final String LINE_SEPARATOR = System.lineSeparator();
+  private static final ThreadLocal<ErrorContext> LOCAL = ThreadLocal.withInitial(ErrorContext::new);
 
   private ErrorContext stored;  //链式
   private String resource;      //资源文件
@@ -42,12 +42,7 @@ public class ErrorContext {
   }
 
   public static ErrorContext instance() {
-    ErrorContext context = LOCAL.get();
-    if (context == null) {
-      context = new ErrorContext();
-      LOCAL.set(context);
-    }
-    return context;
+    return LOCAL.get();
   }
 
   public ErrorContext store() {
@@ -138,7 +133,7 @@ public class ErrorContext {
       description.append(activity);
     }
 
-    // activity
+    // sql
     if (sql != null) {
       description.append(LINE_SEPARATOR);
       description.append("### SQL: ");

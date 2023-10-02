@@ -1,5 +1,5 @@
-/**
- *    Copyright 2009-2019 the original author or authors.
+/*
+ *    Copyright 2009-2022 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.apache.ibatis.transaction.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+
 import javax.sql.DataSource;
 
 import org.apache.ibatis.logging.Log;
@@ -43,11 +44,17 @@ public class JdbcTransaction implements Transaction {
   protected DataSource dataSource;
   protected TransactionIsolationLevel level;
   protected boolean autoCommit;
+  protected boolean skipSetAutoCommitOnClose;
 
   public JdbcTransaction(DataSource ds, TransactionIsolationLevel desiredLevel, boolean desiredAutoCommit) {
+    this(ds, desiredLevel, desiredAutoCommit, false);
+  }
+
+  public JdbcTransaction(DataSource ds, TransactionIsolationLevel desiredLevel, boolean desiredAutoCommit, boolean skipSetAutoCommitOnClose) {
     dataSource = ds;
     level = desiredLevel;
     autoCommit = desiredAutoCommit;
+    this.skipSetAutoCommitOnClose = skipSetAutoCommitOnClose;
   }
 
   public JdbcTransaction(Connection connection) {
@@ -112,7 +119,7 @@ public class JdbcTransaction implements Transaction {
 
   protected void resetAutoCommit() {
     try {
-      if (!connection.getAutoCommit()) {
+      if (!skipSetAutoCommitOnClose && !connection.getAutoCommit()) {
         // MyBatis does not call commit/rollback on a connection if just selects were performed.
         // Some databases start transactions with select statements
         // and they mandate a commit/rollback before closing the connection.
