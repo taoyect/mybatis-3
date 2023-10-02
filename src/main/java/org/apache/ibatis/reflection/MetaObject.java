@@ -32,8 +32,8 @@ import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
  */
 public class MetaObject {
 
-  private final Object originalObject;
-  private final ObjectWrapper objectWrapper;
+  private final Object originalObject;                    //原始对象
+  private final ObjectWrapper objectWrapper;              //包装后的对象
   private final ObjectFactory objectFactory;
   private final ObjectWrapperFactory objectWrapperFactory;
   private final ReflectorFactory reflectorFactory;
@@ -65,20 +65,9 @@ public class MetaObject {
     }
   }
 
-  public ObjectFactory getObjectFactory() {
-    return objectFactory;
-  }
-
-  public ObjectWrapperFactory getObjectWrapperFactory() {
-    return objectWrapperFactory;
-  }
-
-  public ReflectorFactory getReflectorFactory() {
-    return reflectorFactory;
-  }
-
-  public Object getOriginalObject() {
-    return originalObject;
+  public MetaObject metaObjectForProperty(String name) {
+    Object value = getValue(name);
+    return MetaObject.forObject(value, objectFactory, objectWrapperFactory, reflectorFactory);
   }
 
   public String findProperty(String propName, boolean useCamelCaseMapping) {
@@ -123,7 +112,7 @@ public class MetaObject {
     }
   }
 
-  public void setValue(String name, Object value) {
+    public void setValue(String name, Object value) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
       MetaObject metaValue = metaObjectForProperty(prop.getIndexedName());
@@ -131,7 +120,7 @@ public class MetaObject {
         if (value == null) {
           // don't instantiate child path if value is null
           return;
-        } else {
+        } else {  //这个else, 会创建对象并尝试给这个对象的属性赋值
           metaValue = objectWrapper.instantiatePropertyValue(name, prop, objectFactory);
         }
       }
@@ -141,13 +130,24 @@ public class MetaObject {
     }
   }
 
-  public MetaObject metaObjectForProperty(String name) {
-    Object value = getValue(name);
-    return MetaObject.forObject(value, objectFactory, objectWrapperFactory, reflectorFactory);
+  public Object getOriginalObject() {
+    return originalObject;
   }
 
   public ObjectWrapper getObjectWrapper() {
     return objectWrapper;
+  }
+
+  public ObjectFactory getObjectFactory() {
+    return objectFactory;
+  }
+
+  public ObjectWrapperFactory getObjectWrapperFactory() {
+    return objectWrapperFactory;
+  }
+
+  public ReflectorFactory getReflectorFactory() {
+    return reflectorFactory;
   }
 
   public boolean isCollection() {
