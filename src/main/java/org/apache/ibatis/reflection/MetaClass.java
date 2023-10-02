@@ -96,8 +96,19 @@ public class MetaClass {
   private Class<?> getGetterType(PropertyTokenizer prop) {
     Class<?> type = reflector.getGetterType(prop.getName());
     if (prop.getIndex() != null && Collection.class.isAssignableFrom(type)) {
-      Type returnType = getGenericGetterType(prop.getName());
+      Type returnType = getGenericGetterType(prop.getName()); //e.g. List<String>,  List<ArrayList<String>>
       if (returnType instanceof ParameterizedType) {
+        //ParameterizedType指的应该是对于 Collection<E>和Map<K,V> 这种泛型定义的一个“带参实例”
+        //e.g. Collection<E>的其中一种“带参实例”为Collection<String>
+        //e.g. Map<K,V>的其中一种“带参实例”为Map<String, String>
+        /**
+         * getActualTypeArguments()
+         * Returns an array of objects representing the actual type arguments to this type.
+         * List<String> 返回String, Class 类型
+         * List<ArrayList<String>> 返回ArrayList<String>，ParameterizedType类型
+         * List<? extends Number>  返回? extends Number，WildcardType类型
+         * ...
+         */
         Type[] actualTypeArguments = ((ParameterizedType) returnType).getActualTypeArguments();
         if (actualTypeArguments != null && actualTypeArguments.length == 1) {
           returnType = actualTypeArguments[0];
