@@ -38,9 +38,11 @@ public final class PropertyNamer {
     } else {
       throw new ReflectionException("Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
     }
-    //1. 如果name.length == 0, 则直接返回""
-    //2. 如果name.length() > 1 且 name满足第二个字符是大写 --> e.g. CName, 则直接返回CName
+    //name.length() == 1  -->  对于属性只有一个字母的，例如private int x;
+    //name.length() > 1 && !Character.isUpperCase(name.charAt(1))) --> 属性名字长度大于1，并且第二个字母是小写的
+    //所以此处：如果属性名字长度大于1且第二个字母是大写的，将不会处理第一个字母
     if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
+      //让属性名第一个字母小写，然后加上后面的内容
       name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
     }
 

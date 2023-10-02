@@ -45,10 +45,27 @@ import org.xml.sax.SAXParseException;
  */
 public class XPathParser {
 
+  /**
+   * Document 对象代表整个 XML 文档，是一棵文档树的根，可为我们提供对文档数据的最初（或最顶层）的访问入口
+   */
   private final Document document;
+  /**
+   * 该标记表示设置解析器在解析文档的时候是否校验文档，在创建DocumentBuilderFactory实例对象时进行设置
+   */
   private boolean validation;
+  /**
+   * 用来加载本地dtd文件
+   * 如果解析mybatis-config.xml 配置文件，默认联网加载http://mybatis.org/dtd/mybatis-3- config.dtd 这个DTD 文档，
+   * 当网络比较慢时会导致验证过程缓慢。在实践中往往会提前设置 EntityResolver 接口对象加载本地的DTD 文件，从而避免联网加载DTD文件。
+   */
   private EntityResolver entityResolver;
-  private Properties variables;
+  /**
+   * 对应配置文件中节点下定义的键值对集合，包括通过url或者resource读取的键值对集合
+   */
+  private Properties variables;            // xml中<properties>对应的键值对
+  /**
+   * XPath 是一种为查询 XML 文档而设计的语言，它可以与 DOM 解析方式配合使用，实现对 XML 文档的解析
+   */
   private XPath xpath;
 
   public XPathParser(String xml) {
@@ -226,20 +243,22 @@ public class XPathParser {
     }
   }
 
+  /**
+   * 根据输入源创建 Document 对象
+   */
   private Document createDocument(InputSource inputSource) {
     // important: this must only be called AFTER common constructor
     try {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      factory.setValidating(validation);
-
-      factory.setNamespaceAware(false);
-      factory.setIgnoringComments(true);
-      factory.setIgnoringElementContentWhitespace(false);
-      factory.setCoalescing(false);
-      factory.setExpandEntityReferences(true);
+      factory.setValidating(validation);                  //设置是否启用DTD验证
+      factory.setNamespaceAware(false);                   //设置是否支持XML名称空间
+      factory.setIgnoringComments(true);                  //设置解析器是否忽略注释
+      factory.setIgnoringElementContentWhitespace(false); //设置必须删除元素内容中的空格（有时也可以称作“可忽略空格”，请参阅 XML Rec 2.10）
+      factory.setCoalescing(false);  //指定由此代码生成的解析器将把 CDATA 节点转换为 Text 节点，并将其附加到相邻（如果有）的 Text 节点。默认情况下，其值设置为 false
+      factory.setExpandEntityReferences(true);    //指定由此代码生成的解析器将扩展实体引用节点。默认情况下，此值设置为 true
 
       DocumentBuilder builder = factory.newDocumentBuilder();
-      builder.setEntityResolver(entityResolver);
+      builder.setEntityResolver(entityResolver);  //指定使用 EntityResolver 解析要解析的 XML 文档中存在的实体。将其设置为 null 将会导致底层实现使用其自身的默认实现和行为。
       builder.setErrorHandler(new ErrorHandler() {
         @Override
         public void error(SAXParseException exception) throws SAXException {

@@ -45,26 +45,22 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  * @author Clinton Begin
  */
 public class Reflector {
-  private final Class<?> type;  //该 Reflector 对象封装的 Class 类型
-  //可读、可写属性的名称集合
+
+  private final Class<?> type;  //封装的 Class 类型
+  ////可读可写 属性的名称集合
   private final String[] readablePropertyNames;
   private final String[] writablePropertyNames;
-
-  //可读、可写属性对应的 getter 方法和 setter 方法集合，
-  // key 是属性的名称，value 是一个 Invoker 对象。Invoker 是对 Method 对象的封装。
+  //可读、可写属性对应的 getter 方法和 setter 方法集合
+  //key 是属性的名称，value 是一个 Invoker 对象（Invoker 是对 Method 对象的封装）
   private final Map<String, Invoker> getMethods = new HashMap<>();
   private final Map<String, Invoker> setMethods = new HashMap<>();
-
-  //属性对应的 getter 方法返回值 以及 setter 方法的参数值类型
+  //属性对应的 getter 方法返回值以及 setter 方法的参数值类型
   // key 是属性名称，value 是方法的返回值类型或参数类型。
   private final Map<String, Class<?>> getTypes = new HashMap<>();
   private final Map<String, Class<?>> setTypes = new HashMap<>();
+  private Constructor<?> defaultConstructor;  //默认构造方法
 
-  //默认无参构造方法。constructor.getParameterTypes().length == 0
-  private Constructor<?> defaultConstructor;
-
-  //所有属性名称的集合，记录到这个集合中的属性名称都是大写的。
-  private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
+  private Map<String, String> caseInsensitivePropertyMap = new HashMap<>(); //所有属性名称的集合，记录到这个集合中的属性名称都是大写的
 
   public Reflector(Class<?> clazz) {
     type = clazz;
@@ -109,10 +105,17 @@ public class Reflector {
   }
 
   /**
-   * Map<String, List<Method>> conflictingGetters
-   * key : propName, value: "返回值#名字:参数1的全限定类名, ..., 参数N的全限定类名"过滤出来的全部方法
+   * 为什么一个属性会查找到多个 getter 方法呢？
+   * 这主要是由于类间继承导致的，在子类中我们可以覆盖父类的方法，覆盖不仅可以修改方法的具体实现，还可以修改方法的返回值，
+   * getter 方法也不例外，这就导致在第一步中产生了两个签名不同的方法。
    *
-   * 主要是处理“返回值 < 父类”的继承方法对，保留子类中的，丢弃父类中的
+   * covariant overrides 协变重写 （will generate a bridge method which is synthetic by JVM）
+   *
+   * 方法重写遵循“两同两小一大”原则：
+   *  1. 方法名和形参列表相同
+   *  2. 子类返回值类型 <= 父类；子类所抛异常 <= 父类
+   *  3. 子类访问权限 >= 父类
+   *
    */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
@@ -135,7 +138,8 @@ public class Reflector {
             winner = candidate;
           }
         } else if (candidateType.isAssignableFrom(winnerType)) {
-          // OK getter type is descendant
+          //此处因为winnerType 的类型 <= candidateType，所以可以判定winner在子类中，是candidate的override
+          // OK getter type is descendant [dɪˈsendənt]后裔,后代
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
         } else {
@@ -147,14 +151,6 @@ public class Reflector {
       }
       addGetMethod(propName, winner);
     }
-  }
-
-  public static void main(String[] args) throws NoSuchMethodException {
-    Class<Reflector> reflectorClass = Reflector.class;
-    Method addGetMethod = reflectorClass.getDeclaredMethod("addGetMethod", String.class, Method.class);
-//    addGetMethod.setAccessible(true);
-    Class<?> declaringClass = addGetMethod.getDeclaringClass();
-    System.out.println(declaringClass.getName());
   }
 
   private void addGetMethod(String name, Method method) {

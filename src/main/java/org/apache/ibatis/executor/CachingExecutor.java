@@ -95,10 +95,10 @@ public class CachingExecutor implements Executor {
     Cache cache = ms.getCache();
     if (cache != null) {
       flushCacheIfRequired(ms);
-      if (ms.isUseCache() && resultHandler == null) {
+      if (ms.isUseCache() && resultHandler == null) { //useCache=true & 不自定义结果集处理
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")
-        List<E> list = (List<E>) tcm.getObject(cache, key);
+        List<E> list = (List<E>) tcm.getObject(cache, key); //通过TransactionalCacheManager获取缓存
         if (list == null) {
           list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
           tcm.putObject(cache, key, list); // issue #578 and #116
