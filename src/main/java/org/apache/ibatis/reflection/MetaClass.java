@@ -48,46 +48,6 @@ public class MetaClass {
     return MetaClass.forClass(propType, reflectorFactory);
   }
 
-  public String findProperty(String name) {
-    StringBuilder prop = buildProperty(name, new StringBuilder());
-    return prop.length() > 0 ? prop.toString() : null;
-  }
-
-  public String findProperty(String name, boolean useCamelCaseMapping) {
-    if (useCamelCaseMapping) {
-      name = name.replace("_", "");
-    }
-    return findProperty(name);
-  }
-
-  public String[] getGetterNames() {
-    return reflector.getGetablePropertyNames();
-  }
-
-  public String[] getSetterNames() {
-    return reflector.getSetablePropertyNames();
-  }
-
-  public Class<?> getSetterType(String name) {
-    PropertyTokenizer prop = new PropertyTokenizer(name);
-    if (prop.hasNext()) {
-      MetaClass metaProp = metaClassForProperty(prop.getName());
-      return metaProp.getSetterType(prop.getChildren());
-    } else {
-      return reflector.getSetterType(prop.getName());
-    }
-  }
-
-  public Class<?> getGetterType(String name) {
-    PropertyTokenizer prop = new PropertyTokenizer(name);
-    if (prop.hasNext()) {
-      MetaClass metaProp = metaClassForProperty(prop);
-      return metaProp.getGetterType(prop.getChildren());
-    }
-    // issue #506. Resolve the type inside a Collection Object
-    return getGetterType(prop);
-  }
-
   private MetaClass metaClassForProperty(PropertyTokenizer prop) {
     Class<?> propType = getGetterType(prop);
     return MetaClass.forClass(propType, reflectorFactory);
@@ -140,6 +100,46 @@ public class MetaClass {
     } catch (NoSuchFieldException | IllegalAccessException ignored) {
     }
     return null;
+  }
+
+  public String findProperty(String name) {
+    StringBuilder prop = buildProperty(name, new StringBuilder());
+    return prop.length() > 0 ? prop.toString() : null;
+  }
+
+  public String findProperty(String name, boolean useCamelCaseMapping) {
+    if (useCamelCaseMapping) {
+      name = name.replace("_", "");
+    }
+    return findProperty(name);
+  }
+
+  public String[] getGetterNames() {
+    return reflector.getGetablePropertyNames();
+  }
+
+  public String[] getSetterNames() {
+    return reflector.getSetablePropertyNames();
+  }
+
+  public Class<?> getSetterType(String name) {
+    PropertyTokenizer prop = new PropertyTokenizer(name);
+    if (prop.hasNext()) {
+      MetaClass metaProp = metaClassForProperty(prop.getName());
+      return metaProp.getSetterType(prop.getChildren());
+    } else {
+      return reflector.getSetterType(prop.getName());
+    }
+  }
+
+  public Class<?> getGetterType(String name) {
+    PropertyTokenizer prop = new PropertyTokenizer(name);
+    if (prop.hasNext()) {
+      MetaClass metaProp = metaClassForProperty(prop);
+      return metaProp.getGetterType(prop.getChildren());
+    }
+    // issue #506. Resolve the type inside a Collection Object
+    return getGetterType(prop);
   }
 
   public boolean hasSetter(String name) {
