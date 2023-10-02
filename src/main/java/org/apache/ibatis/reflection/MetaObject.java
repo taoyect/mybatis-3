@@ -45,10 +45,15 @@ public class MetaObject {
     this.reflectorFactory = reflectorFactory;
 
     if (object instanceof ObjectWrapper) {
+      //【不包装】如果一个对象已经被包装过了，不需要包装，直接赋值给objectWrapper就行了
       this.objectWrapper = (ObjectWrapper) object;
     } else if (objectWrapperFactory.hasWrapperFor(object)) {
+      //【尝试让工厂来包装】【用户可扩展】 用户可以实现这个工厂，来切换wrapper的逻辑
+      //如果objectWrapperFactory has wrapper for object【工厂中有对于object的包装】，直接从工厂中拿
+      //DefaultObjectWrapperFactory默认啥也没实现，hasWrapperFor返回false/getWrapperFor抛ReflectionException异常
       this.objectWrapper = objectWrapperFactory.getWrapperFor(this, object);
     } else if (object instanceof Map) {
+      //【走框架给的封装】
       this.objectWrapper = new MapWrapper(this, (Map) object);
     } else if (object instanceof Collection) {
       this.objectWrapper = new CollectionWrapper(this, (Collection) object);
