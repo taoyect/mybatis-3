@@ -1,11 +1,11 @@
 /*
- *    Copyright 2009-2021 the original author or authors.
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,12 +36,13 @@ public final class PropertyNamer {
     } else if (name.startsWith("get") || name.startsWith("set")) {
       name = name.substring(3);
     } else {
-      throw new ReflectionException("Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
+      throw new ReflectionException(
+          "Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
     }
-    //name.length() == 1  -->  对于属性只有一个字母的，例如private int x;
+//name.length() == 1  -->  对于属性只有一个字母的，例如private int x;
     //name.length() > 1 && !Character.isUpperCase(name.charAt(1))) --> 属性名字长度大于1，并且第二个字母是小写的
     //所以此处：如果属性名字长度大于1且第二个字母是大写的，将不会处理第一个字母
-    if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
+    if (name.length() == 1 || name.length() > 1 && !Character.isUpperCase(name.charAt(1))) {
       //让属性名第一个字母小写，然后加上后面的内容
       name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
     }
@@ -54,7 +55,7 @@ public final class PropertyNamer {
   }
 
   public static boolean isGetter(String name) {
-    return (name.startsWith("get") && name.length() > 3) || (name.startsWith("is") && name.length() > 2);
+    return name.startsWith("get") && name.length() > 3 || name.startsWith("is") && name.length() > 2;
   }
 
   public static boolean isSetter(String name) {

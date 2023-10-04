@@ -1,11 +1,11 @@
 /*
- *    Copyright 2009-2021 the original author or authors.
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *       https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,8 @@
  */
 package org.apache.ibatis.submitted.foreach;
 
-import static com.googlecode.catchexception.apis.BDDCatchException.*;
+import static com.googlecode.catchexception.apis.BDDCatchException.caughtException;
+import static com.googlecode.catchexception.apis.BDDCatchException.when;
 import static org.assertj.core.api.BDDAssertions.then;
 
 import java.io.IOException;
@@ -49,7 +50,7 @@ class ForEachTest {
 
     // populate in-memory database
     BaseDataTest.runScript(sqlSessionFactory.getConfiguration().getEnvironment().getDataSource(),
-            "org/apache/ibatis/submitted/foreach/CreateDB.sql");
+        "org/apache/ibatis/submitted/foreach/CreateDB.sql");
   }
 
   @Test
@@ -118,8 +119,8 @@ class ForEachTest {
     try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
       Mapper mapper = sqlSession.getMapper(Mapper.class);
       when(() -> mapper.typoInItemProperty(Collections.singletonList(new User())));
-      then(caughtException()).isInstanceOf(PersistenceException.class)
-        .hasMessageContaining("There is no getter for property named 'idd' in 'class org.apache.ibatis.submitted.foreach.User'");
+      then(caughtException()).isInstanceOf(PersistenceException.class).hasMessageContaining(
+          "There is no getter for property named 'idd' in 'class org.apache.ibatis.submitted.foreach.User'");
     }
   }
 
@@ -148,7 +149,7 @@ class ForEachTest {
       sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
     }
     BaseDataTest.runScript(sqlSessionFactory.getConfiguration().getEnvironment().getDataSource(),
-      "org/apache/ibatis/submitted/foreach/CreateDB.sql");
+        "org/apache/ibatis/submitted/foreach/CreateDB.sql");
 
     try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
       Mapper mapper = sqlSession.getMapper(Mapper.class);
