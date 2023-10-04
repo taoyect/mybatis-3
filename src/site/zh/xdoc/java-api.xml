@@ -7,7 +7,7 @@
        you may not use this file except in compliance with the License.
        You may obtain a copy of the License at
 
-          http://www.apache.org/licenses/LICENSE-2.0
+          https://www.apache.org/licenses/LICENSE-2.0
 
        Unless required by applicable law or agreed to in writing, software
        distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
 
 -->
 <document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+  xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 https://maven.apache.org/xsd/xdoc-2.0.xsd">
 
   <properties>
     <title>MyBatis 3 | Java API</title>
@@ -245,7 +245,7 @@ public interface ResultHandler<T> {
   <p>当你将 <code>ExecutorType</code> 设置为 <code>ExecutorType.BATCH</code> 时，可以使用这个方法清除（执行）缓存在 JDBC 驱动类中的批量更新语句。</p>
   <source><![CDATA[List<BatchResult> flushStatements()]]></source>
 
-  <h5>事务控制方法</h5>
+  <h5 id="transaction-control-methods">事务控制方法</h5>
   <p>
     有四个方法用来控制事务作用域。当然，如果你已经设置了自动提交或你使用了外部事务管理器，这些方法就没什么作用了。然而，如果你正在使用由 Connection 实例控制的 JDBC 事务管理器，那么这四个方法就会派上用场：
   </p>
@@ -253,7 +253,7 @@ public interface ResultHandler<T> {
 void commit(boolean force)
 void rollback()
 void rollback(boolean force)</source>
-  <p>默认情况下 MyBatis 不会自动提交事务，除非它侦测到调用了插入、更新或删除方法改变了数据库。如果你没有使用这些方法提交修改，那么你可以在 commit 和 rollback 方法参数中传入 true 值，来保证事务被正常提交（注意，在自动提交模式或者使用了外部事务管理器的情况下，设置 force 值对 session 无效）。大部分情况下你无需调用 rollback()，因为 MyBatis 会在你没有调用 commit 时替你完成回滚操作。不过，当你要在一个可能多次提交或回滚的 session 中详细控制事务，回滚操作就派上用场了。</p>
+  <p>默认情况下 MyBatis 不会自动提交事务，除非它侦测到调用了插入、更新、删除或 select with <code>affectData</code> enabled 方法改变了数据库。如果你没有使用这些方法提交修改，那么你可以在 commit 和 rollback 方法参数中传入 true 值，来保证事务被正常提交（注意，在自动提交模式或者使用了外部事务管理器的情况下，设置 force 值对 session 无效）。大部分情况下你无需调用 rollback()，因为 MyBatis 会在你没有调用 commit 时替你完成回滚操作。不过，当你要在一个可能多次提交或回滚的 session 中详细控制事务，回滚操作就派上用场了。</p>
   <p><span class="label important">提示</span> MyBatis-Spring 和 MyBatis-Guice 提供了声明式事务处理，所以如果你在使用 Mybatis 的同时使用了 Spring 或者 Guice，请参考它们的手册以获取更多的内容。</p>
 
 <h5>本地缓存</h5>
@@ -416,7 +416,7 @@ try (SqlSession session = sqlSessionFactory.openSession()) {
         <td>该注解允许你指定大部分开关和配置选项，它们通常在映射语句上作为属性出现。与在注解上提供大量的属性相比，<code>Options</code> 注解提供了一致、清晰的方式来指定选项。属性：<code>useCache=true</code>、<code>flushCache=FlushCachePolicy.DEFAULT</code>、<code>resultSetType=DEFAULT</code>、<code>statementType=PREPARED</code>、<code>fetchSize=-1</code>、<code>timeout=-1</code>、<code>useGeneratedKeys=false</code>、<code>keyProperty=""</code>、<code>keyColumn=""</code>、<code>resultSets=""</code>, <code>databaseId=""</code>。注意，Java 注解无法指定 <code>null</code> 值。因此，一旦你使用了 <code>Options</code> 注解，你的语句就会被上述属性的默认值所影响。要注意避免默认值带来的非预期行为。
         <code>databaseId</code>（3.5.5以上可用）, 如果有一个配置好的 <code>DatabaseIdProvider</code>,
         MyBatis 会加载不带 <code>databaseId</code> 属性和带有匹配当前数据库 <code>databaseId</code> 属性的所有语句。如果同时存在带 <code>databaseId</code> 和不带 <code>databaseId</code> 属性的相同语句，则后者会被舍弃。<br/><br/>
-             
+
         注意：<code>keyColumn</code> 属性只在某些数据库中有效（如 Oracle、PostgreSQL 等）。要了解更多关于 <code>keyColumn</code> 和 <code>keyProperty</code> 可选值信息，请查看“insert, update 和 delete”一节。</td>
       </tr>
       <tr>
@@ -585,10 +585,10 @@ class UserSqlBuilder {
     <p>这是一个在全局配置下让所有映射方法在同一个 sql provider 类里面的例子（3.5.6 后可用）:</p>
     <source><![CDATA[
 Configuration configuration = new Configuration();
-configuration.setDefaultSqlProviderType(TemplateFilePathProvider.class); // 让所有映射方法在同一个 sql provider 类里面 
+configuration.setDefaultSqlProviderType(TemplateFilePathProvider.class); // 让所有映射方法在同一个 sql provider 类里面
 // ...]]></source>
     <source><![CDATA[
-// 在 sql provider 注解上可以省略 type/value 属性 
+// 在 sql provider 注解上可以省略 type/value 属性
 // 如果省略，MyBatis 将使用 defaultSqlProviderType 所指定的类
 public interface UserMapper {
 
@@ -627,7 +627,7 @@ class UserSqlProvider implements ProviderMethodResolver {
 
          <p>这个例子展现了如何在声明注解时使用 <code>databaseId</code> 属性（3.5.5后可用）：</p>
     <source><![CDATA[
-@Select(value = "SELECT SYS_GUID() FROM dual", databaseId = "oracle") // 如果 DatabaseIdProvider 提供的是 "oracle"，使用这条语句 
+@Select(value = "SELECT SYS_GUID() FROM dual", databaseId = "oracle") // 如果 DatabaseIdProvider 提供的是 "oracle"，使用这条语句
 @Select(value = "SELECT uuid_generate_v4()", databaseId = "postgres") // 如果 DatabaseIdProvider 提供的是 "postgres"，使用这条语句
 @Select("SELECT RANDOM_UUID()") // 如果 DatabaseIdProvider 没有配置或者没有对应的 databaseId, 使用这条语句
 String generateId();
