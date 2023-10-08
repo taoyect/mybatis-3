@@ -53,8 +53,10 @@ import org.apache.ibatis.session.Configuration;
  * @author Kazuki Shimizu
  */
 public final class TypeHandlerRegistry {
-
+  // JdbcType  ---> TypeHandler
   private final Map<JdbcType, TypeHandler<?>> jdbcTypeHandlerMap = new EnumMap<>(JdbcType.class);
+  // Type ---> Map<JdbcType, TypeHandler<?>> ,
+  // 也就意味着一个java类型可以使用多种JdbcType与之对应
   private final Map<Type, Map<JdbcType, TypeHandler<?>>> typeHandlerMap = new ConcurrentHashMap<>();
   private final TypeHandler<Object> unknownTypeHandler;
   private final Map<Class<?>, TypeHandler<?>> allTypeHandlersMap = new HashMap<>();
@@ -78,6 +80,8 @@ public final class TypeHandlerRegistry {
    *
    * @since 3.5.4
    */
+  // 该构造器中我们可以看到很多内容，是mybatis中默认支持的各种类型转换器
+  // 其实这些类型转换器已经可以满足我们绝大部分的使用场景
   public TypeHandlerRegistry(Configuration configuration) {
     this.unknownTypeHandler = new UnknownTypeHandler(configuration);
 
@@ -235,6 +239,7 @@ public final class TypeHandlerRegistry {
   }
 
   @SuppressWarnings("unchecked")
+  // 根据java类型和jdbcType查找对应的转化器
   private <T> TypeHandler<T> getTypeHandler(Type type, JdbcType jdbcType) {
     if (ParamMap.class.equals(type)) {
       return null;
@@ -255,6 +260,7 @@ public final class TypeHandlerRegistry {
     return (TypeHandler<T>) handler;
   }
 
+  // 根据java类型，查找与之匹配的jdbc类型的转化器集合
   private Map<JdbcType, TypeHandler<?>> getJdbcHandlerMap(Type type) {
     Map<JdbcType, TypeHandler<?>> jdbcHandlerMap = typeHandlerMap.get(type);
     if (jdbcHandlerMap != null) {
