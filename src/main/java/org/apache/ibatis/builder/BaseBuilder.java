@@ -43,8 +43,8 @@ public abstract class BaseBuilder {
 
   public BaseBuilder(Configuration configuration) {
     this.configuration = configuration;
-    this.typeAliasRegistry = this.configuration.getTypeAliasRegistry();
-    this.typeHandlerRegistry = this.configuration.getTypeHandlerRegistry();
+    this.typeAliasRegistry = this.configuration.getTypeAliasRegistry(); //构建器拿到一些默认的别名
+    this.typeHandlerRegistry = this.configuration.getTypeHandlerRegistry(); //构建器拿到一些默认的类型处理器
   }
 
   public Configuration getConfiguration() {

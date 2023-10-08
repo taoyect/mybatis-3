@@ -48,6 +48,9 @@ public abstract class VFS {
     static final VFS INSTANCE = createVFS();
 
     @SuppressWarnings("unchecked")
+    //先遍历用户的自定义实现(USER_IMPLEMENTATIONS)，再遍历mybatis提供的内部实现(IMPLEMENTATIONS)
+    //找到一个isValid() = true的即可
+    //通过反射实例化 一个 VFS的实现类的对象
     static VFS createVFS() {
       // Try the user implementations first, then the built-ins
       List<Class<? extends VFS>> impls = new ArrayList<>(USER_IMPLEMENTATIONS);
@@ -97,6 +100,7 @@ public abstract class VFS {
    * @param clazz
    *          The {@link VFS} implementation class to add.
    */
+  //增加用户的自定义实现类
   public static void addImplClass(Class<? extends VFS> clazz) {
     if (clazz != null) {
       USER_IMPLEMENTATIONS.add(clazz);
@@ -111,6 +115,7 @@ public abstract class VFS {
    *
    * @return the class
    */
+  //2012年的代码，通过类名获取对应的Class，和Resources.classForName(String className)作用类似
   protected static Class<?> getClass(String className) {
     try {
       return Thread.currentThread().getContextClassLoader().loadClass(className);
@@ -135,6 +140,7 @@ public abstract class VFS {
    *
    * @return the method
    */
+  //通过Class、方法的名称+方法的参数类型，获取一个对应的Method
   protected static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
     if (clazz == null) {
       return null;
@@ -170,6 +176,7 @@ public abstract class VFS {
    *           If anything else goes wrong
    */
   @SuppressWarnings("unchecked")
+  //利用反射调用object对象的方法，parameters是方法入参列表
   protected static <T> T invoke(Method method, Object object, Object... parameters)
       throws IOException, RuntimeException {
     try {
@@ -195,6 +202,7 @@ public abstract class VFS {
    * @throws IOException
    *           If I/O errors occur
    */
+  //找指定路径下的资源，以URL的形式返回
   protected static List<URL> getResources(String path) throws IOException {
     return Collections.list(Thread.currentThread().getContextClassLoader().getResources(path));
   }

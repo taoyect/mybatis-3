@@ -115,20 +115,33 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void parseConfiguration(XNode root) {
     try {
       // issue #117 read properties first
+      // 1、优先读取properties标签，为后续的操作提供执行环境
       propertiesElement(root.evalNode("properties"));
+      // 2、将settings配置，解析为一个Properties，后续会在合适的时机加载配置
       Properties settings = settingsAsProperties(root.evalNode("settings"));
-      loadCustomVfs(settings);  //加载自定义的VFS
+      // 3、加载自定义的虚拟文件系统 Virtual File System
+      loadCustomVfs(settings);
+      // 4、加载自定义的日志实现
       loadCustomLogImpl(settings);
+      // 5、解析，别名标签，注册别名
       typeAliasesElement(root.evalNode("typeAliases"));
+      // 6、解析插件标签
       pluginElement(root.evalNode("plugins"));
+      // 7、配置对象工厂
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      // 8、配置反射工厂
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+      // 9、加载配置项
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
+      // 10、解析环境标签
       environmentsElement(root.evalNode("environments"));
+      // 11、解析databaseIdProvider标签
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+      // 12、解析typeHandlers标签，注册自定义的类型转化器
       typeHandlerElement(root.evalNode("typeHandlers"));
+      // 13、解析mapper，注册mappedStatement
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -142,7 +155,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     // 处理<settings>所有子节点<setting>，将其name属性和value属性，整理到Properties对象中保存
     Properties props = context.getChildrenAsProperties();
     // Check that all settings are known to the configuration class
-    // 创建Configuration对应的MetaClass对象 ？？
+    // 创建Configuration对应的MetaClass对象，仅用于检测子节点<setting>配置内容的合法性
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
     for (Object key : props.keySet()) {
       // 检测Configuration对象中是否包含每个配置项的setter方法
@@ -155,12 +168,13 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void loadCustomVfs(Properties props) throws ClassNotFoundException {
-    String value = props.getProperty("vfsImpl");
+    String value = props.getProperty("vfsImpl");  //如果<setting>中配置了 vfsImpl
     if (value != null) {
-      String[] clazzes = value.split(",");
+      String[] clazzes = value.split(",");  //支持配置多个,用逗号分隔
       for (String clazz : clazzes) {
         if (!clazz.isEmpty()) {
           @SuppressWarnings("unchecked")
+          // 通过反射构造虚拟文件系统实例，并传递给配置类
           Class<? extends VFS> vfsImpl = (Class<? extends VFS>) Resources.classForName(clazz);
           configuration.setVfsImpl(vfsImpl);
         }
@@ -219,9 +233,9 @@ public class XMLConfigBuilder extends BaseBuilder {
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor()
-            .newInstance();
-        interceptorInstance.setProperties(properties);
-        configuration.addInterceptor(interceptorInstance);
+            .newInstance(); // 构建插件实例对象（可以给插件设置别名）
+        interceptorInstance.setProperties(properties); // 设置插件的参数
+        configuration.addInterceptor(interceptorInstance); // 加入拦截器链
       }
     }
   }
@@ -254,10 +268,10 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
-      Properties defaults = context.getChildrenAsProperties();
+      Properties defaults = context.getChildrenAsProperties();    //<property>标签中定义的配置项
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
-      if (resource != null && url != null) {
+      if (resource != null && url != null) {  //resource和url不能同时存在
         throw new BuilderException(
             "The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
@@ -266,6 +280,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       } else if (url != null) {
         defaults.putAll(Resources.getUrlAsProperties(url));
       }
+      //configuration中已经有的配置项，比如在SqlSessionFactoryBuilder.build()时加入了可选参数 Properties properties
       Properties vars = configuration.getVariables();
       if (vars != null) {
         defaults.putAll(vars);
@@ -314,14 +329,14 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void environmentsElement(XNode context) throws Exception {
     if (context != null) {
-      //如果当前XMLConfigBuilder对象的成员变量environment为null，environment = 属性default配置的值
+      // 【选择被激活的环境】这里的environment是个字符串，XMLConfigBuilder --> private String environment;
+      //如果没有给XMLConfigBuilder构建器指定环境，将选择“属性default配置的值”作为目标环境
       if (environment == null) {
         environment = context.getStringAttribute("default");
       }
-      for (XNode child : context.getChildren()) {
+      for (XNode child : context.getChildren()) { //遍历所有的<environment>
         String id = child.getStringAttribute("id");
-        //遍历<environment>找到和成员变量environment相等的id
-        if (isSpecifiedEnvironment(id)) {
+        if (isSpecifiedEnvironment(id)) { //找到和成员变量environment相等的id
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
           DataSource dataSource = dsFactory.getDataSource();
@@ -362,7 +377,6 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context != null) {
       String type = context.getStringAttribute("type");
       Properties props = context.getChildrenAsProperties();
-      //从typeAliasRegistry中找到以 type属性值 作为别名的 类，并实例化
       TransactionFactory factory = (TransactionFactory) resolveClass(type).getDeclaredConstructor().newInstance();
       factory.setProperties(props);
       return factory;
