@@ -28,31 +28,22 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * @author Clinton Begin
- * XNode是MyBatis对 Node的包装，Node是w3c标准DOM中定义的节点，XNode的重点是能处理属性及文本中的${}占位符
- *
- *            <dataSource type="POOLED">
- *                 <property name="driver" value="${jdbc.driver}"/>
- *                 <property name="url" value="${jdbc.url}"/>
- *                 <property name="username" value="${jdbc.username}"/>
- *                 <property name="password" value="${jdbc.password}"/>
- *             </dataSource>
+ * @author Clinton Begin XNode是MyBatis对 Node的包装，Node是w3c标准DOM中定义的节点，XNode的重点是能处理属性及文本中的${}占位符 <dataSource type="POOLED">
+ *         <property name="driver" value="${jdbc.driver}"/> <property name="url" value="${jdbc.url}"/>
+ *         <property name="username" value="${jdbc.username}"/> <property name="password" value="${jdbc.password}"/>
+ *         </dataSource>
  */
 public class XNode {
 
-  private final Node node;  //所包装的Node对象，org.w3c.dorn.Node对象
-  private final String name; //Node节点名称, e.g. //dataSource/property/@value 时，为 value
-  private final String body;  //节点的内容，e.g. //dataSource/property/@value 时，为 ${jdbc.driver}
+  private final Node node; // 所包装的Node对象，org.w3c.dorn.Node对象
+  private final String name; // Node节点名称, e.g. //dataSource/property/@value 时，为 value
+  private final String body; // 节点的内容，e.g. //dataSource/property/@value 时，为 ${jdbc.driver}
   /**
-   * 该节点属性的集合
-   * e.g.
-   *  name  ->  driver
-   *  value -> ${jdbc.driver}
+   * 该节点属性的集合 e.g. name -> driver value -> ${jdbc.driver}
    */
-  private final Properties attributes;  // 节点的属性对象
-  private final Properties variables;   //指向的就是构建XPathParser传入的properties
-  private final XPathParser xpathParser;//指向的就是构建的XPathParser
-
+  private final Properties attributes; // 节点的属性对象
+  private final Properties variables; // 指向的就是构建XPathParser传入的properties
+  private final XPathParser xpathParser;// 指向的就是构建的XPathParser
 
   public XNode(XPathParser xpathParser, Node node, Properties variables) {
     this.xpathParser = xpathParser;

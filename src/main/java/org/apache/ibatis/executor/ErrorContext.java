@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2022 the original author or authors.
+ *    Copyright 2009-2023 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,23 +20,19 @@ package org.apache.ibatis.executor;
  */
 public class ErrorContext {
   /**
-   * 获取操作系统对应的换行符，各个操作系统不同
-   * windows下的文本文件换行符:\r\n
-   * linux/unix下的文本文件换行符:\r
-   * Mac下的文本文件换行符:\n
-   *
-   * 也是换行符,功能和"\n"是一致的,但是此种写法屏蔽了 Windows和Linux的区别 ，更保险一些
+   * 获取操作系统对应的换行符，各个操作系统不同 windows下的文本文件换行符:\r\n linux/unix下的文本文件换行符:\r Mac下的文本文件换行符:\n 也是换行符,功能和"\n"是一致的,但是此种写法屏蔽了
+   * Windows和Linux的区别 ，更保险一些
    */
   private static final String LINE_SEPARATOR = System.lineSeparator();
   private static final ThreadLocal<ErrorContext> LOCAL = ThreadLocal.withInitial(ErrorContext::new);
 
-  private ErrorContext stored;  //链式
-  private String resource;      //资源文件
-  private String activity;      //行为（增删改查等）
-  private String object;        //异常发生在哪个对象
-  private String message;       //异常消息的内容
-  private String sql;           //哪条sql发生异常
-  private Throwable cause;      //异常栈
+  private ErrorContext stored; // 链式
+  private String resource; // 资源文件
+  private String activity; // 行为（增删改查等）
+  private String object; // 异常发生在哪个对象
+  private String message; // 异常消息的内容
+  private String sql; // 哪条sql发生异常
+  private Throwable cause; // 异常栈
 
   private ErrorContext() {
   }
@@ -46,8 +42,8 @@ public class ErrorContext {
   }
 
   public ErrorContext store() {
-    ErrorContext newContext = new ErrorContext(); //new一个新的ErrorContext
-    newContext.stored = this;   //把当前的ErrorContext作为“旧的”存到stored
+    ErrorContext newContext = new ErrorContext(); // new一个新的ErrorContext
+    newContext.stored = this; // 把当前的ErrorContext作为“旧的”存到stored
     LOCAL.set(newContext);
     return LOCAL.get();
   }

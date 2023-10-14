@@ -20,9 +20,7 @@ import java.util.Locale;
 import org.apache.ibatis.reflection.ReflectionException;
 
 /**
- * @author Clinton Begin
- *
- * 转换方法名到属性名，以及检测一个方法名是否为 getter 或 setter 方法
+ * @author Clinton Begin 转换方法名到属性名，以及检测一个方法名是否为 getter 或 setter 方法
  */
 public final class PropertyNamer {
 
@@ -39,11 +37,11 @@ public final class PropertyNamer {
       throw new ReflectionException(
           "Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
     }
-//name.length() == 1  -->  对于属性只有一个字母的，例如private int x;
-    //name.length() > 1 && !Character.isUpperCase(name.charAt(1))) --> 属性名字长度大于1，并且第二个字母是小写的
-    //所以此处：如果属性名字长度大于1且第二个字母是大写的，将不会处理第一个字母
+    // name.length() == 1 --> 对于属性只有一个字母的，例如private int x;
+    // name.length() > 1 && !Character.isUpperCase(name.charAt(1))) --> 属性名字长度大于1，并且第二个字母是小写的
+    // 所以此处：如果属性名字长度大于1且第二个字母是大写的，将不会处理第一个字母
     if (name.length() == 1 || name.length() > 1 && !Character.isUpperCase(name.charAt(1))) {
-      //让属性名第一个字母小写，然后加上后面的内容
+      // 让属性名第一个字母小写，然后加上后面的内容
       name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
     }
 

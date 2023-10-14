@@ -38,7 +38,7 @@ public class BoundSql {
   private final List<ParameterMapping> parameterMappings; // 参数映射
   private final Object parameterObject; // 参数对象
   private final Map<String, Object> additionalParameters;
-  private final MetaObject metaParameters;  // 元数据参数
+  private final MetaObject metaParameters; // 元数据参数
 
   public BoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings,
       Object parameterObject) {

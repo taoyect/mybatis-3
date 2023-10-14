@@ -54,9 +54,9 @@ import org.apache.ibatis.type.JdbcType;
 public class XMLConfigBuilder extends BaseBuilder {
   // 状态标识字段，记录当前 XMLConfigBuilder 对象是否已经成功解析完 mybatis-config.xml 配置文件
   private boolean parsed;
-  private final XPathParser parser; //XML 解析器，这里的 parser 对象就是用来解析 mybatis-config.xml 配置文件的
-  private String environment;  //标签定义的环境名称
-  //ReflectorFactory 接口的核心功能是实现对 Reflector 对象的创建和缓存。
+  private final XPathParser parser; // XML 解析器，这里的 parser 对象就是用来解析 mybatis-config.xml 配置文件的
+  private String environment; // 标签定义的环境名称
+  // ReflectorFactory 接口的核心功能是实现对 Reflector 对象的创建和缓存。
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
   public XMLConfigBuilder(Reader reader) {
@@ -168,9 +168,9 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void loadCustomVfs(Properties props) throws ClassNotFoundException {
-    String value = props.getProperty("vfsImpl");  //如果<setting>中配置了 vfsImpl
+    String value = props.getProperty("vfsImpl"); // 如果<setting>中配置了 vfsImpl
     if (value != null) {
-      String[] clazzes = value.split(",");  //支持配置多个,用逗号分隔
+      String[] clazzes = value.split(","); // 支持配置多个,用逗号分隔
       for (String clazz : clazzes) {
         if (!clazz.isEmpty()) {
           @SuppressWarnings("unchecked")
@@ -183,14 +183,14 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   /**
-   * value不区分大小写，常用如下。也可配置自定义的org.apache.ibatis.logging.Log实现类，放于classpath下
-   * slf4j -> 	 "class org.apache.ibatis.logging.slf4j.Slf4jImpl"
-   * log4j (deprecated since 3.5.9)  -> "class org.apache.ibatis.logging.log4j.Log4jImpl"
-   * log4j2 ->  "class org.apache.ibatis.logging.log4j2.Log4j2Impl"
-   * jdk_logging -> "class org.apache.ibatis.logging.jdk14.Jdk14LoggingImpl"
-   * commons_logging -> "class org.apache.ibatis.logging.commons.JakartaCommonsLoggingImpl"
-   * stdout_logging ->  "class org.apache.ibatis.logging.stdout.StdOutImpl"
-   * no_logging -> "class org.apache.ibatis.logging.nologging.NoLoggingImpl"
+   * value不区分大小写，常用如下。也可配置自定义的org.apache.ibatis.logging.Log实现类，放于classpath下 slf4j -> "class
+   * org.apache.ibatis.logging.slf4j.Slf4jImpl" log4j (deprecated since 3.5.9) -> "class
+   * org.apache.ibatis.logging.log4j.Log4jImpl" log4j2 -> "class org.apache.ibatis.logging.log4j2.Log4j2Impl"
+   * jdk_logging -> "class org.apache.ibatis.logging.jdk14.Jdk14LoggingImpl" commons_logging -> "class
+   * org.apache.ibatis.logging.commons.JakartaCommonsLoggingImpl" stdout_logging -> "class
+   * org.apache.ibatis.logging.stdout.StdOutImpl" no_logging -> "class
+   * org.apache.ibatis.logging.nologging.NoLoggingImpl"
+   *
    * @param props
    */
   private void loadCustomLogImpl(Properties props) {
@@ -201,20 +201,20 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
-        //解析 <package name="packageName"/>
+        // 解析 <package name="packageName"/>
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
-          //注册包路径名packageName下的类到typeAliasRegistry的Map中 <key, value>
-            //  如果类中使用了注解org.apache.ibatis.type.Alias显式给出了“别名”，优先选用该别名为key
-            //  否则以类的simpleName的toLowerCase为key，类的全路径名为value
-          //Ignore inner classes and interfaces (including package-info.java)
+          // 注册包路径名packageName下的类到typeAliasRegistry的Map中 <key, value>
+          // 如果类中使用了注解org.apache.ibatis.type.Alias显式给出了“别名”，优先选用该别名为key
+          // 否则以类的simpleName的toLowerCase为key，类的全路径名为value
+          // Ignore inner classes and interfaces (including package-info.java)
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
           String alias = child.getStringAttribute("alias");
           String type = child.getStringAttribute("type");
           try {
             Class<?> clazz = Resources.classForName(type);
-            if (alias == null) { //若没有设置alias属性，注册到map中时<key, value>的选取同package配置
+            if (alias == null) { // 若没有设置alias属性，注册到map中时<key, value>的选取同package配置
               typeAliasRegistry.registerAlias(clazz);
             } else {
               typeAliasRegistry.registerAlias(alias, clazz);
@@ -268,10 +268,10 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
-      Properties defaults = context.getChildrenAsProperties();    //<property>标签中定义的配置项
+      Properties defaults = context.getChildrenAsProperties(); // <property>标签中定义的配置项
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
-      if (resource != null && url != null) {  //resource和url不能同时存在
+      if (resource != null && url != null) { // resource和url不能同时存在
         throw new BuilderException(
             "The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
@@ -280,7 +280,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       } else if (url != null) {
         defaults.putAll(Resources.getUrlAsProperties(url));
       }
-      //configuration中已经有的配置项，比如在SqlSessionFactoryBuilder.build()时加入了可选参数 Properties properties
+      // configuration中已经有的配置项，比如在SqlSessionFactoryBuilder.build()时加入了可选参数 Properties properties
       Properties vars = configuration.getVariables();
       if (vars != null) {
         defaults.putAll(vars);
@@ -330,13 +330,13 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void environmentsElement(XNode context) throws Exception {
     if (context != null) {
       // 【选择被激活的环境】这里的environment是个字符串，XMLConfigBuilder --> private String environment;
-      //如果没有给XMLConfigBuilder构建器指定环境，将选择“属性default配置的值”作为目标环境
+      // 如果没有给XMLConfigBuilder构建器指定环境，将选择“属性default配置的值”作为目标环境
       if (environment == null) {
         environment = context.getStringAttribute("default");
       }
-      for (XNode child : context.getChildren()) { //遍历所有的<environment>
+      for (XNode child : context.getChildren()) { // 遍历所有的<environment>
         String id = child.getStringAttribute("id");
-        if (isSpecifiedEnvironment(id)) { //找到和成员变量environment相等的id
+        if (isSpecifiedEnvironment(id)) { // 找到和成员变量environment相等的id
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
           DataSource dataSource = dsFactory.getDataSource();
@@ -358,16 +358,16 @@ public class XMLConfigBuilder extends BaseBuilder {
         type = "DB_VENDOR";
       }
       Properties properties = context.getChildrenAsProperties();
-      //根据type对应的属性值，找到xxxDatabaseIdProvider实现类
+      // 根据type对应的属性值，找到xxxDatabaseIdProvider实现类
       databaseIdProvider = (DatabaseIdProvider) resolveClass(type).getDeclaredConstructor().newInstance();
       databaseIdProvider.setProperties(properties);
     }
     Environment environment = configuration.getEnvironment();
     if (environment != null && databaseIdProvider != null) {
-      //String productName = dataSource.getConnection().getMetaData().getDatabaseProductName()
-      //如果在databaseIdProvider节点中有配置类似于 <property name="MySQL" value="mysql" />
-          //if (productName.contains((String) property.getKey())) 来找value，找不到返回null
-      //否则 直接返回productName
+      // String productName = dataSource.getConnection().getMetaData().getDatabaseProductName()
+      // 如果在databaseIdProvider节点中有配置类似于 <property name="MySQL" value="mysql" />
+      // if (productName.contains((String) property.getKey())) 来找value，找不到返回null
+      // 否则 直接返回productName
       String databaseId = databaseIdProvider.getDatabaseId(environment.getDataSource());
       configuration.setDatabaseId(databaseId);
     }
@@ -388,7 +388,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context != null) {
       String type = context.getStringAttribute("type");
       Properties props = context.getChildrenAsProperties();
-      //从typeAliasRegistry中找到以 type属性值 作为别名的 类，并实例化
+      // 从typeAliasRegistry中找到以 type属性值 作为别名的 类，并实例化
       DataSourceFactory factory = (DataSourceFactory) resolveClass(type).getDeclaredConstructor().newInstance();
       factory.setProperties(props);
       return factory;

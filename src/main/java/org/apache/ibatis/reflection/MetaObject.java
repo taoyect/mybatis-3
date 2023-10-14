@@ -32,8 +32,8 @@ import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
  */
 public class MetaObject {
 
-  private final Object originalObject;                    //原始对象
-  private final ObjectWrapper objectWrapper;              //包装后的对象
+  private final Object originalObject; // 原始对象
+  private final ObjectWrapper objectWrapper; // 包装后的对象
   private final ObjectFactory objectFactory;
   private final ObjectWrapperFactory objectWrapperFactory;
   private final ReflectorFactory reflectorFactory;
@@ -46,15 +46,15 @@ public class MetaObject {
     this.reflectorFactory = reflectorFactory;
 
     if (object instanceof ObjectWrapper) {
-      //【不包装】如果一个对象已经被包装过了，不需要包装，直接赋值给objectWrapper就行了
+      // 【不包装】如果一个对象已经被包装过了，不需要包装，直接赋值给objectWrapper就行了
       this.objectWrapper = (ObjectWrapper) object;
     } else if (objectWrapperFactory.hasWrapperFor(object)) {
-      //【尝试让工厂来包装】【用户可扩展】 用户可以实现这个工厂，来切换wrapper的逻辑
-      //如果objectWrapperFactory has wrapper for object【工厂中有对于object的包装】，直接从工厂中拿
-      //DefaultObjectWrapperFactory默认啥也没实现，hasWrapperFor返回false/getWrapperFor抛ReflectionException异常
+      // 【尝试让工厂来包装】【用户可扩展】 用户可以实现这个工厂，来切换wrapper的逻辑
+      // 如果objectWrapperFactory has wrapper for object【工厂中有对于object的包装】，直接从工厂中拿
+      // DefaultObjectWrapperFactory默认啥也没实现，hasWrapperFor返回false/getWrapperFor抛ReflectionException异常
       this.objectWrapper = objectWrapperFactory.getWrapperFor(this, object);
     } else if (object instanceof Map) {
-      //【走框架给的封装】
+      // 【走框架给的封装】
       this.objectWrapper = new MapWrapper(this, (Map) object);
     } else if (object instanceof Collection) {
       this.objectWrapper = new CollectionWrapper(this, (Collection) object);
@@ -117,7 +117,7 @@ public class MetaObject {
     }
   }
 
-    public void setValue(String name, Object value) {
+  public void setValue(String name, Object value) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
       MetaObject metaValue = metaObjectForProperty(prop.getIndexedName());
@@ -125,7 +125,7 @@ public class MetaObject {
         if (value == null) {
           // don't instantiate child path if value is null
           return;
-        } //这个else, 会创建对象并尝试给这个对象的属性赋值
+        } // 这个else, 会创建对象并尝试给这个对象的属性赋值
         metaValue = objectWrapper.instantiatePropertyValue(name, prop, objectFactory);
       }
       metaValue.setValue(prop.getChildren(), value);

@@ -53,7 +53,7 @@ import org.apache.ibatis.session.Configuration;
  * @author Kazuki Shimizu
  */
 public final class TypeHandlerRegistry {
-  // JdbcType  ---> TypeHandler
+  // JdbcType ---> TypeHandler
   private final Map<JdbcType, TypeHandler<?>> jdbcTypeHandlerMap = new EnumMap<>(JdbcType.class);
   // Type ---> Map<JdbcType, TypeHandler<?>> ,
   // 也就意味着一个java类型可以使用多种JdbcType与之对应

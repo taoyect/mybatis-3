@@ -87,10 +87,12 @@ public class TypeParameterResolver {
   }
 
   /**
-   *
    * @param type
-   * @param srcType 一般是目标Class
-   * @param declaringClass type真实所在的类，如存在继承关系时，子类的方法可能仅在父类中定义
+   * @param srcType
+   *          一般是目标Class
+   * @param declaringClass
+   *          type真实所在的类，如存在继承关系时，子类的方法可能仅在父类中定义
+   *
    * @return
    */
   private static Type resolveType(Type type, Type srcType, Class<?> declaringClass) {

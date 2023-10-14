@@ -116,12 +116,12 @@ public class TypeAliasRegistry {
         return null;
       }
       // issue #748
-      String key = string.toLowerCase(Locale.ENGLISH);  //转换入参为小写
+      String key = string.toLowerCase(Locale.ENGLISH); // 转换入参为小写
       Class<T> value;
       if (typeAliases.containsKey(key)) {
         value = (Class<T>) typeAliases.get(key);
       } else {
-        value = (Class<T>) Resources.classForName(string); //Loads a class
+        value = (Class<T>) Resources.classForName(string); // Loads a class
       }
       return value;
     } catch (ClassNotFoundException e) {
