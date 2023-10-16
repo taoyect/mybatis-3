@@ -55,10 +55,10 @@ import org.apache.ibatis.type.TypeHandler;
  */
 public class XMLMapperBuilder extends BaseBuilder {
 
-  private final XPathParser parser;
-  private final MapperBuilderAssistant builderAssistant;
-  private final Map<String, XNode> sqlFragments;
-  private final String resource;
+  private final XPathParser parser;  // xpath解析器
+  private final MapperBuilderAssistant builderAssistant; // 助手工具类，可以进行命名空间管理，二级缓存管理、statement注册等操作
+  private final Map<String, XNode> sqlFragments;// sql片段缓存，<sql id="selectRef" > select id,username,money from account </sql>
+  private final String resource;  // 资源对象，（xml文件本身）
 
   @Deprecated
   public XMLMapperBuilder(Reader reader, Configuration configuration, String resource, Map<String, XNode> sqlFragments,
@@ -96,15 +96,18 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   public void parse() {
-    if (!configuration.isResourceLoaded(resource)) {
-      configurationElement(parser.evalNode("/mapper"));
-      configuration.addLoadedResource(resource);
+    if (!configuration.isResourceLoaded(resource)) {  // 如果该文件尚未被加载，loadedResources.contains(resource)  Set<String>
+      configurationElement(parser.evalNode("/mapper")); // 解析mapper标签,此处内容是核心
+      configuration.addLoadedResource(resource);  // loadedResources.add(resource)
+      // 1、根据命名空间得到绑定的dao的类型
+      // 2、注册资源 configuration.addLoadedResource("namespace:" + namespace);
+      // 3、注册一个mapper configuration.addMapper(boundType);
       bindMapperForNamespace();
     }
 
-    parsePendingResultMaps();
-    parsePendingCacheRefs();
-    parsePendingStatements();
+    parsePendingResultMaps();  // 解析待处理的结果集
+    parsePendingCacheRefs();   // 解析待处理的缓存
+    parsePendingStatements();  // 解析待处理的statement
   }
 
   public XNode getSqlFragment(String refid) {
@@ -113,12 +116,12 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void configurationElement(XNode context) {
     try {
-      String namespace = context.getStringAttribute("namespace");
+      String namespace = context.getStringAttribute("namespace"); // 获取命名空间
       if (namespace == null || namespace.isEmpty()) {
         throw new BuilderException("Mapper's namespace cannot be empty");
       }
       builderAssistant.setCurrentNamespace(namespace);
-      cacheRefElement(context.evalNode("cache-ref"));
+      cacheRefElement(context.evalNode("cache-ref")); //configuration: cacheRefMap.put(namespace, referencedNamespace);
       cacheElement(context.evalNode("cache"));
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
       resultMapElements(context.evalNodes("/mapper/resultMap"));
@@ -210,7 +213,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (context != null) {
       String type = context.getStringAttribute("type", "PERPETUAL");
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
-      String eviction = context.getStringAttribute("eviction", "LRU");
+      String eviction = context.getStringAttribute("eviction", "LRU");  //eviction 驱逐 (淘汰策略)
       Class<? extends Cache> evictionClass = typeAliasRegistry.resolveAlias(eviction);
       Long flushInterval = context.getLongAttribute("flushInterval");
       Integer size = context.getIntAttribute("size");
