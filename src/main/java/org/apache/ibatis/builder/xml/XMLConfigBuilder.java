@@ -437,7 +437,7 @@ public class XMLConfigBuilder extends BaseBuilder {
             ErrorContext.instance().resource(resource);
             try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
               XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource,
-                  configuration.getSqlFragments());
+                  configuration.getSqlFragments()); //此处 configuration.getSqlFragments() 仅仅是把空的Map传进去接数据
               mapperParser.parse();
             }
           } else if (resource == null && url != null && mapperClass == null) {
