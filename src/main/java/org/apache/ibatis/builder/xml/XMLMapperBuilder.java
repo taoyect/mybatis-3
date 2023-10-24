@@ -196,6 +196,20 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析cache-ref标签
+   *
+   * configuration -> cacheRefMap.put(namespace, referencedNamespace);
+   *
+   * MapperBuilderAssistant ->
+   *        Cache cache = configuration.getCache(referencedNamespace);
+   *        如果没拿到cache, 说明对应的refCache还没解析进configuration, 等最后再解析一遍.
+   *                       抛异常 -> configuration.addIncompleteCacheRef(cacheRefResolver);
+   *                       unresolvedCacheRef = true;
+   *       如果拿到cache -> currentCache = cache;
+   *                       unresolvedCacheRef = false;
+   * @param context
+   */
   private void cacheRefElement(XNode context) {
     if (context != null) {
       configuration.addCacheRef(builderAssistant.getCurrentNamespace(), context.getStringAttribute("namespace"));
@@ -209,6 +223,13 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析cache标签,通过CacheBuilder构建Cache
+   *
+   *  configuration.addCache(cache);
+   *  MapperBuilderAssistant -> currentCache = cache;
+   * @param context
+   */
   private void cacheElement(XNode context) {
     if (context != null) {
       String type = context.getStringAttribute("type", "PERPETUAL");
