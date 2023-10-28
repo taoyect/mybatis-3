@@ -168,16 +168,16 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void loadCustomVfs(Properties props) throws ClassNotFoundException {
-    String value = props.getProperty("vfsImpl"); // 如果<setting>中配置了 vfsImpl
-    if (value != null) {
-      String[] clazzes = value.split(","); // 支持配置多个,用逗号分隔
-      for (String clazz : clazzes) {
-        if (!clazz.isEmpty()) {
-          @SuppressWarnings("unchecked")
-          // 通过反射构造虚拟文件系统实例，并传递给配置类
-          Class<? extends VFS> vfsImpl = (Class<? extends VFS>) Resources.classForName(clazz);
-          configuration.setVfsImpl(vfsImpl);
-        }
+    String value = props.getProperty("vfsImpl");
+    if (value == null) {
+      return;
+    }
+    String[] clazzes = value.split(",");
+    for (String clazz : clazzes) {
+      if (!clazz.isEmpty()) {
+        @SuppressWarnings("unchecked")
+        Class<? extends VFS> vfsImpl = (Class<? extends VFS>) Resources.classForName(clazz);
+        configuration.setVfsImpl(vfsImpl);
       }
     }
   }
@@ -198,38 +198,38 @@ public class XMLConfigBuilder extends BaseBuilder {
     configuration.setLogImpl(logImpl);
   }
 
-  private void typeAliasesElement(XNode parent) {
-    if (parent != null) {
-      for (XNode child : parent.getChildren()) {
-        // 解析 <package name="packageName"/>
-        if ("package".equals(child.getName())) {
-          String typeAliasPackage = child.getStringAttribute("name");
-          // 注册包路径名packageName下的类到typeAliasRegistry的Map中 <key, value>
-          // 如果类中使用了注解org.apache.ibatis.type.Alias显式给出了“别名”，优先选用该别名为key
-          // 否则以类的simpleName的toLowerCase为key，类的全路径名为value
-          // Ignore inner classes and interfaces (including package-info.java)
-          configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
-        } else {
-          String alias = child.getStringAttribute("alias");
-          String type = child.getStringAttribute("type");
-          try {
-            Class<?> clazz = Resources.classForName(type);
-            if (alias == null) { // 若没有设置alias属性，注册到map中时<key, value>的选取同package配置
-              typeAliasRegistry.registerAlias(clazz);
-            } else {
-              typeAliasRegistry.registerAlias(alias, clazz);
-            }
-          } catch (ClassNotFoundException e) {
-            throw new BuilderException("Error registering typeAlias for '" + alias + "'. Cause: " + e, e);
+  private void typeAliasesElement(XNode context) {
+    if (context == null) {
+      return;
+    }
+    for (XNode child : context.getChildren()) {
+      if ("package".equals(child.getName())) {
+        String typeAliasPackage = child.getStringAttribute("name");
+        // 注册包路径名packageName下的类到typeAliasRegistry的Map中 <key, value>
+        // 如果类中使用了注解org.apache.ibatis.type.Alias显式给出了“别名”，优先选用该别名为key
+        // 否则以类的simpleName的toLowerCase为key，类的全路径名为value
+        // Ignore inner classes and interfaces (including package-info.java)
+        configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
+      } else {
+        String alias = child.getStringAttribute("alias");
+        String type = child.getStringAttribute("type");
+        try {
+          Class<?> clazz = Resources.classForName(type);
+          if (alias == null) {
+            typeAliasRegistry.registerAlias(clazz);
+          } else {
+            typeAliasRegistry.registerAlias(alias, clazz);
           }
+        } catch (ClassNotFoundException e) {
+          throw new BuilderException("Error registering typeAlias for '" + alias + "'. Cause: " + e, e);
         }
       }
     }
   }
 
-  private void pluginElement(XNode parent) throws Exception {
-    if (parent != null) {
-      for (XNode child : parent.getChildren()) {
+  private void pluginElement(XNode context) throws Exception {
+    if (context != null) {
+      for (XNode child : context.getChildren()) {
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor()
@@ -267,27 +267,27 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void propertiesElement(XNode context) throws Exception {
-    if (context != null) {
-      Properties defaults = context.getChildrenAsProperties(); // <property>标签中定义的配置项
-      String resource = context.getStringAttribute("resource");
-      String url = context.getStringAttribute("url");
-      if (resource != null && url != null) { // resource和url不能同时存在
-        throw new BuilderException(
-            "The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
-      }
-      if (resource != null) {
-        defaults.putAll(Resources.getResourceAsProperties(resource));
-      } else if (url != null) {
-        defaults.putAll(Resources.getUrlAsProperties(url));
-      }
-      // configuration中已经有的配置项，比如在SqlSessionFactoryBuilder.build()时加入了可选参数 Properties properties
-      Properties vars = configuration.getVariables();
-      if (vars != null) {
-        defaults.putAll(vars);
-      }
-      parser.setVariables(defaults);
-      configuration.setVariables(defaults);
+    if (context == null) {
+      return;
     }
+    Properties defaults = context.getChildrenAsProperties();
+    String resource = context.getStringAttribute("resource");
+    String url = context.getStringAttribute("url");
+    if (resource != null && url != null) {
+      throw new BuilderException(
+          "The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
+    }
+    if (resource != null) {
+      defaults.putAll(Resources.getResourceAsProperties(resource));
+    } else if (url != null) {
+      defaults.putAll(Resources.getUrlAsProperties(url));
+    }
+    Properties vars = configuration.getVariables();
+    if (vars != null) {
+      defaults.putAll(vars);
+    }
+    parser.setVariables(defaults);
+    configuration.setVariables(defaults);
   }
 
   private void settingsElement(Properties props) {
@@ -328,23 +328,22 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void environmentsElement(XNode context) throws Exception {
-    if (context != null) {
-      // 【选择被激活的环境】这里的environment是个字符串，XMLConfigBuilder --> private String environment;
-      // 如果没有给XMLConfigBuilder构建器指定环境，将选择“属性default配置的值”作为目标环境
-      if (environment == null) {
-        environment = context.getStringAttribute("default");
-      }
-      for (XNode child : context.getChildren()) { // 遍历所有的<environment>
-        String id = child.getStringAttribute("id");
-        if (isSpecifiedEnvironment(id)) { // 找到和成员变量environment相等的id
-          TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
-          DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
-          DataSource dataSource = dsFactory.getDataSource();
-          Environment.Builder environmentBuilder = new Environment.Builder(id).transactionFactory(txFactory)
-              .dataSource(dataSource);
-          configuration.setEnvironment(environmentBuilder.build());
-          break;
-        }
+    if (context == null) {
+      return;
+    }
+    if (environment == null) {
+      environment = context.getStringAttribute("default");
+    }
+    for (XNode child : context.getChildren()) {
+      String id = child.getStringAttribute("id");
+      if (isSpecifiedEnvironment(id)) {
+        TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
+        DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
+        DataSource dataSource = dsFactory.getDataSource();
+        Environment.Builder environmentBuilder = new Environment.Builder(id).transactionFactory(txFactory)
+            .dataSource(dataSource);
+        configuration.setEnvironment(environmentBuilder.build());
+        break;
       }
     }
   }
@@ -396,64 +395,66 @@ public class XMLConfigBuilder extends BaseBuilder {
     throw new BuilderException("Environment declaration requires a DataSourceFactory.");
   }
 
-  private void typeHandlerElement(XNode parent) {
-    if (parent != null) {
-      for (XNode child : parent.getChildren()) {
-        if ("package".equals(child.getName())) {
-          String typeHandlerPackage = child.getStringAttribute("name");
-          typeHandlerRegistry.register(typeHandlerPackage);
-        } else {
-          String javaTypeName = child.getStringAttribute("javaType");
-          String jdbcTypeName = child.getStringAttribute("jdbcType");
-          String handlerTypeName = child.getStringAttribute("handler");
-          Class<?> javaTypeClass = resolveClass(javaTypeName);
-          JdbcType jdbcType = resolveJdbcType(jdbcTypeName);
-          Class<?> typeHandlerClass = resolveClass(handlerTypeName);
-          if (javaTypeClass != null) {
-            if (jdbcType == null) {
-              typeHandlerRegistry.register(javaTypeClass, typeHandlerClass);
-            } else {
-              typeHandlerRegistry.register(javaTypeClass, jdbcType, typeHandlerClass);
-            }
+  private void typeHandlerElement(XNode context) {
+    if (context == null) {
+      return;
+    }
+    for (XNode child : context.getChildren()) {
+      if ("package".equals(child.getName())) {
+        String typeHandlerPackage = child.getStringAttribute("name");
+        typeHandlerRegistry.register(typeHandlerPackage);
+      } else {
+        String javaTypeName = child.getStringAttribute("javaType");
+        String jdbcTypeName = child.getStringAttribute("jdbcType");
+        String handlerTypeName = child.getStringAttribute("handler");
+        Class<?> javaTypeClass = resolveClass(javaTypeName);
+        JdbcType jdbcType = resolveJdbcType(jdbcTypeName);
+        Class<?> typeHandlerClass = resolveClass(handlerTypeName);
+        if (javaTypeClass != null) {
+          if (jdbcType == null) {
+            typeHandlerRegistry.register(javaTypeClass, typeHandlerClass);
           } else {
-            typeHandlerRegistry.register(typeHandlerClass);
+            typeHandlerRegistry.register(javaTypeClass, jdbcType, typeHandlerClass);
           }
+        } else {
+          typeHandlerRegistry.register(typeHandlerClass);
         }
       }
     }
   }
 
-  private void mapperElement(XNode parent) throws Exception {
-    if (parent != null) {
-      for (XNode child : parent.getChildren()) {
-        if ("package".equals(child.getName())) {
-          String mapperPackage = child.getStringAttribute("name");
-          configuration.addMappers(mapperPackage);
-        } else {
-          String resource = child.getStringAttribute("resource");
-          String url = child.getStringAttribute("url");
-          String mapperClass = child.getStringAttribute("class");
-          if (resource != null && url == null && mapperClass == null) {
-            ErrorContext.instance().resource(resource);
-            try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
-              XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource,
-                  configuration.getSqlFragments()); //此处 configuration.getSqlFragments() 仅仅是把空的Map传进去接数据
-              mapperParser.parse();
-            }
-          } else if (resource == null && url != null && mapperClass == null) {
-            ErrorContext.instance().resource(url);
-            try (InputStream inputStream = Resources.getUrlAsStream(url)) {
-              XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url,
-                  configuration.getSqlFragments());
-              mapperParser.parse();
-            }
-          } else if (resource == null && url == null && mapperClass != null) {
-            Class<?> mapperInterface = Resources.classForName(mapperClass);
-            configuration.addMapper(mapperInterface);
-          } else {
-            throw new BuilderException(
-                "A mapper element may only specify a url, resource or class, but not more than one.");
+  private void mapperElement(XNode context) throws Exception {
+    if (context == null) {
+      return;
+    }
+    for (XNode child : context.getChildren()) {
+      if ("package".equals(child.getName())) {
+        String mapperPackage = child.getStringAttribute("name");
+        configuration.addMappers(mapperPackage);
+      } else {
+        String resource = child.getStringAttribute("resource");
+        String url = child.getStringAttribute("url");
+        String mapperClass = child.getStringAttribute("class");
+        if (resource != null && url == null && mapperClass == null) {
+          ErrorContext.instance().resource(resource);
+          try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
+            XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource,
+                configuration.getSqlFragments());
+            mapperParser.parse();
           }
+        } else if (resource == null && url != null && mapperClass == null) {
+          ErrorContext.instance().resource(url);
+          try (InputStream inputStream = Resources.getUrlAsStream(url)) {
+            XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url,
+                configuration.getSqlFragments());
+            mapperParser.parse();
+          }
+        } else if (resource == null && url == null && mapperClass != null) {
+          Class<?> mapperInterface = Resources.classForName(mapperClass);
+          configuration.addMapper(mapperInterface);
+        } else {
+          throw new BuilderException(
+              "A mapper element may only specify a url, resource or class, but not more than one.");
         }
       }
     }
