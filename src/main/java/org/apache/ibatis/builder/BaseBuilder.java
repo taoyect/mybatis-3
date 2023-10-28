@@ -38,6 +38,7 @@ public abstract class BaseBuilder {
   protected final TypeAliasRegistry typeAliasRegistry; // 别名注册中心
   // TypeHandler 注册中心。除了定义别名之外，我们在 mybatis-config.xml 配置文件中，
   // 还可以使用 <typeHandlers> 标签添加自定义 TypeHandler 实现，实现数据库类型与 Java 类型的自定义转换，
+
   // 这些自定义的 TypeHandler 都会记录在这个 TypeHandlerRegistry 对象中。
 
   protected final TypeHandlerRegistry typeHandlerRegistry;
