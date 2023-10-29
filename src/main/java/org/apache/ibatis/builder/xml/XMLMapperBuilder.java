@@ -403,10 +403,13 @@ public class XMLMapperBuilder extends BaseBuilder {
     Class<? extends TypeHandler<?>> typeHandlerClass = resolveClass(typeHandler);
     JdbcType jdbcTypeEnum = resolveJdbcType(jdbcType);
     Map<String, String> discriminatorMap = new HashMap<>();
+    // 解析<discriminator>标签的<case>子标签
     for (XNode caseChild : context.getChildren()) {
       String value = caseChild.getStringAttribute("value");
+      // 通过前面介绍的processNestedResultMappings()方法，解析<case>标签，创建相应的嵌套ResultMap对象
       String resultMap = caseChild.getStringAttribute("resultMap",
           processNestedResultMappings(caseChild, resultMappings, resultType));
+      // 记录该列值与对应选择的ResultMap的Id
       discriminatorMap.put(value, resultMap);
     }
     return builderAssistant.buildDiscriminator(resultType, column, javaTypeClass, jdbcTypeEnum, typeHandlerClass,
@@ -457,6 +460,10 @@ public class XMLMapperBuilder extends BaseBuilder {
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
     String nestedSelect = context.getStringAttribute("select");
+    // 如果<association>标签没有指定resultMap属性，那么就是匿名嵌套映射，需要通过
+    //processNestedResultMappings()方法解析该匿名的嵌套映射
+    //processNestedResultMappings()方法会递归执行resultMapElement() 方法解析 <association> 标签和 <collection> 标签指定的
+    // 匿名嵌套映射，得到一个完整的ResultMap 对象，并添加到Configuration.resultMaps集合中
     String nestedResultMap = context.getStringAttribute("resultMap",
         () -> processNestedResultMappings(context, Collections.emptyList(), resultType));
     String notNullColumn = context.getStringAttribute("notNullColumn");

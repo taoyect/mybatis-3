@@ -153,7 +153,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
   public ResultMap addResultMap(String id, Class<?> type, String extend, Discriminator discriminator,
       List<ResultMapping> resultMappings, Boolean autoMapping) {
+    // ResultMap的完整id是"namespace.id"的格式
     id = applyCurrentNamespace(id, false);
+    // 获取被继承的ResultMap的完整id，也就是父ResultMap对象的完整id
     extend = applyCurrentNamespace(extend, true);
 
     if (extend != null) {
@@ -176,6 +178,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       }
       resultMappings.addAll(extendedResultMappings);
     }
+    // 创建ResultMap对象，并添加到Configuration.resultMaps集合中保存
     ResultMap resultMap = new ResultMap.Builder(configuration, id, type, resultMappings, autoMapping)
         .discriminator(discriminator).build();
     configuration.addResultMap(resultMap);
@@ -435,6 +438,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
   private Class<?> resolveResultJavaType(Class<?> resultType, String property, Class<?> javaType) {
     if (javaType == null && property != null) {
+      //尝试通过property来figure out javaType
       try {
         MetaClass metaResultType = MetaClass.forClass(resultType, configuration.getReflectorFactory());
         javaType = metaResultType.getSetterType(property);
@@ -445,6 +449,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     if (javaType == null) {
       javaType = Object.class;
     }
+    //如果javaType 不为null，直接返回就行
     return javaType;
   }
 
