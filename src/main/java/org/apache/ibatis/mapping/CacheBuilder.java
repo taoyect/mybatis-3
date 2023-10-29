@@ -90,17 +90,21 @@ public class CacheBuilder {
   }
 
   public Cache build() {
+    // 如果没有设置的话：将implementation默认值设置为PerpetualCache，在decorators集合中默认添加LruCache装饰器
     setDefaultImplementations();
+    // 通过反射，初始化implementation指定类型的对象：作为最底层的Cache
     Cache cache = newBaseCacheInstance(implementation, id);
     setCacheProperties(cache);
     // issue #352, do not apply decorators to custom caches
     if (PerpetualCache.class.equals(cache.getClass())) {
+      // 如果是PerpetualCache类型，则为其添加decorators集合中指定的装饰器
       for (Class<? extends Cache> decorator : decorators) {
         cache = newCacheDecoratorInstance(decorator, cache);
         setCacheProperties(cache);
       }
       cache = setStandardDecorators(cache);
     } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {
+      // 如果不是PerpetualCache类型，就是其他自定义类型的Cache，则添加一个LoggingCache装饰器
       cache = new LoggingCache(cache);
     }
     return cache;

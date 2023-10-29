@@ -284,16 +284,55 @@ public class XMLMapperBuilder extends BaseBuilder {
   private ResultMap resultMapElement(XNode resultMapNode) {
     return resultMapElement(resultMapNode, Collections.emptyList(), null);
   }
-
+  /**
+   * <!ELEMENT resultMap (constructor?,id*,result*,association*,collection*, discriminator?)>
+   * <!ATTLIST id
+   * property CDATA #IMPLIED
+   * javaType CDATA #IMPLIED
+   * column CDATA #IMPLIED
+   * jdbcType CDATA #IMPLIED
+   * typeHandler CDATA #IMPLIED
+   * >
+   *
+   *<!ATTLIST result
+   * property CDATA #IMPLIED
+   * javaType CDATA #IMPLIED
+   * column CDATA #IMPLIED
+   * jdbcType CDATA #IMPLIED
+   * typeHandler CDATA #IMPLIED
+   * >
+   * <!ELEMENT constructor ((idArg|arg)*)>
+   *<!ATTLIST association
+   * property CDATA #REQUIRED
+   * column CDATA #IMPLIED
+   * javaType CDATA #IMPLIED
+   * jdbcType CDATA #IMPLIED
+   * select CDATA #IMPLIED
+   * resultMap CDATA #IMPLIED
+   * typeHandler CDATA #IMPLIED
+   * notNullColumn CDATA #IMPLIED
+   * columnPrefix CDATA #IMPLIED
+   * resultSet CDATA #IMPLIED
+   * foreignColumn CDATA #IMPLIED
+   * autoMapping (true|false) #IMPLIED
+   * fetchType (lazy|eager) #IMPLIED
+   * >
+   */
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings,
       Class<?> enclosingType) {
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
+    //获取 <resultMap> 标签的type 属性值，这个值表示结果集将被映射成 type 指定类型的对象。
+    // 如果没有指定 type 属性的话，会找其他属性值，
+    // 优先级依次是：type、ofType、resultType、javaType。在这一步中会确定映射得到的对象类型，这里支持别名转换。
     String type = resultMapNode.getStringAttribute("type", resultMapNode.getStringAttribute("ofType",
         resultMapNode.getStringAttribute("resultType", resultMapNode.getStringAttribute("javaType"))));
     Class<?> typeClass = resolveClass(type);
     if (typeClass == null) {
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);
     }
+    //解析<resultMap>标签下的各个子标签，每个子标签都会生成一个ResultMapping 对象，
+    // 这个 ResultMapping 对象会被添加到resultMappings 集合（List<ResultMapping> 类型）中暂存。
+    // 这里会涉及 <id>、<result>、<association>、<collection>、<discriminator> 等子标签的解析
     Discriminator discriminator = null;
     List<ResultMapping> resultMappings = new ArrayList<>(additionalResultMappings);
     List<XNode> resultChildren = resultMapNode.getChildren();
@@ -303,6 +342,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       } else if ("discriminator".equals(resultChild.getName())) {
         discriminator = processDiscriminatorElement(resultChild, typeClass, resultMappings);
       } else {
+        //id,result,association,collection
         List<ResultFlag> flags = new ArrayList<>();
         if ("id".equals(resultChild.getName())) {
           flags.add(ResultFlag.ID);
@@ -310,9 +350,14 @@ public class XMLMapperBuilder extends BaseBuilder {
         resultMappings.add(buildResultMappingFromContext(resultChild, typeClass, flags));
       }
     }
+    //获取 <resultMap> 标签的id 属性，默认值会拼装所有父标签的id、value 或 property 属性值
     String id = resultMapNode.getStringAttribute("id", resultMapNode.getValueBasedIdentifier());
+    //获取 <resultMap> 标签的extends、autoMapping 等属性
     String extend = resultMapNode.getStringAttribute("extends");
     Boolean autoMapping = resultMapNode.getBooleanAttribute("autoMapping");
+    //创建 ResultMapResolver 对象，
+    // ResultMapResolver 会根据上面解析到的ResultMappings 集合以及 <resultMap> 标签的属性构造 ResultMap 对象，
+    // 并将其添加到 Configuration.resultMaps 集合（StrictMap 类型）中。
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator,
         resultMappings, autoMapping);
     try {
