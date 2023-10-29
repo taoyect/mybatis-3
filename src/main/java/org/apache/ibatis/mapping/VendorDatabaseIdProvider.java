@@ -16,9 +16,7 @@
 package org.apache.ibatis.mapping;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -61,25 +59,16 @@ public class VendorDatabaseIdProvider implements DatabaseIdProvider {
   private String getDatabaseName(DataSource dataSource) throws SQLException {
     String productName = getDatabaseProductName(dataSource); // 首先，通过数据源获取
     if (this.properties != null) {
-      // 如果我们配置了properties，比如"MySQL" -> "my_mysql", 通过数据源将获取到MySQL驱动代码设置的产品名称"MySQL"
-      // 匹配到key后将返回 "my_mysql"
-      for (Map.Entry<Object, Object> property : properties.entrySet()) {
-        if (productName.contains((String) property.getKey())) {
-          return (String) property.getValue();
-        }
-      }
-      // no match, return null
-      return null;
+      return properties.entrySet().stream().filter(entry -> productName.contains((String) entry.getKey()))
+          .map(entry -> (String) entry.getValue()).findFirst().orElse(null);
     }
     return productName;
   }
 
   private String getDatabaseProductName(DataSource dataSource) throws SQLException {
     try (Connection con = dataSource.getConnection()) {
-      DatabaseMetaData metaData = con.getMetaData();
-      return metaData.getDatabaseProductName();
+      return con.getMetaData().getDatabaseProductName();
     }
-
   }
 
   private static class LogHolder {

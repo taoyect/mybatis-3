@@ -104,10 +104,9 @@ public class XMLMapperBuilder extends BaseBuilder {
       // 3、注册一个mapper configuration.addMapper(boundType);
       bindMapperForNamespace();
     }
-
-    parsePendingResultMaps();  // 解析待处理的结果集
-    parsePendingCacheRefs();   // 解析待处理的缓存
-    parsePendingStatements();  // 解析待处理的statement
+    parsePendingResultMaps();
+    parsePendingCacheRefs();
+    parsePendingStatements();
   }
 
   public XNode getSqlFragment(String refid) {

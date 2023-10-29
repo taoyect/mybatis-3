@@ -120,14 +120,12 @@ public class XMLConfigBuilder extends BaseBuilder {
       // 2、将settings配置，解析为一个Properties，后续会在合适的时机加载配置
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       // 3、加载自定义的虚拟文件系统 Virtual File System
-      loadCustomVfs(settings);
+      loadCustomVfsImpl(settings);
       // 4、加载自定义的日志实现
       loadCustomLogImpl(settings);
       // 5、解析，别名标签，注册别名
       typeAliasesElement(root.evalNode("typeAliases"));
-      // 6、解析插件标签
-      pluginElement(root.evalNode("plugins"));
-      // 7、配置对象工厂
+      pluginsElement(root.evalNode("plugins"));
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       // 8、配置反射工厂
@@ -140,9 +138,9 @@ public class XMLConfigBuilder extends BaseBuilder {
       // 11、解析databaseIdProvider标签
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
       // 12、解析typeHandlers标签，注册自定义的类型转化器
-      typeHandlerElement(root.evalNode("typeHandlers"));
+      typeHandlersElement(root.evalNode("typeHandlers"));
       // 13、解析mapper，注册mappedStatement
-      mapperElement(root.evalNode("mappers"));
+      mappersElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
     }
@@ -167,7 +165,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     return props;
   }
 
-  private void loadCustomVfs(Properties props) throws ClassNotFoundException {
+  private void loadCustomVfsImpl(Properties props) throws ClassNotFoundException {
     String value = props.getProperty("vfsImpl");
     if (value == null) {
       return;
@@ -227,7 +225,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
-  private void pluginElement(XNode context) throws Exception {
+  private void pluginsElement(XNode context) throws Exception {
     if (context != null) {
       for (XNode child : context.getChildren()) {
         String interceptor = child.getStringAttribute("interceptor");
@@ -349,20 +347,20 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void databaseIdProviderElement(XNode context) throws Exception {
-    DatabaseIdProvider databaseIdProvider = null;
-    if (context != null) {
-      String type = context.getStringAttribute("type");
-      // awful patch to keep backward compatibility
-      if ("VENDOR".equals(type)) {
-        type = "DB_VENDOR";
-      }
-      Properties properties = context.getChildrenAsProperties();
-      // 根据type对应的属性值，找到xxxDatabaseIdProvider实现类
-      databaseIdProvider = (DatabaseIdProvider) resolveClass(type).getDeclaredConstructor().newInstance();
-      databaseIdProvider.setProperties(properties);
+    if (context == null) {
+      return;
     }
+    String type = context.getStringAttribute("type");
+    // awful patch to keep backward compatibility
+    if ("VENDOR".equals(type)) {
+      type = "DB_VENDOR";
+    }
+    Properties properties = context.getChildrenAsProperties();
+    DatabaseIdProvider databaseIdProvider = (DatabaseIdProvider) resolveClass(type).getDeclaredConstructor()
+        .newInstance();
+    databaseIdProvider.setProperties(properties);
     Environment environment = configuration.getEnvironment();
-    if (environment != null && databaseIdProvider != null) {
+    if (environment != null) {
       // String productName = dataSource.getConnection().getMetaData().getDatabaseProductName()
       // 如果在databaseIdProvider节点中有配置类似于 <property name="MySQL" value="mysql" />
       // if (productName.contains((String) property.getKey())) 来找value，找不到返回null
@@ -395,7 +393,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     throw new BuilderException("Environment declaration requires a DataSourceFactory.");
   }
 
-  private void typeHandlerElement(XNode context) {
+  private void typeHandlersElement(XNode context) {
     if (context == null) {
       return;
     }
@@ -423,7 +421,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
-  private void mapperElement(XNode context) throws Exception {
+  private void mappersElement(XNode context) throws Exception {
     if (context == null) {
       return;
     }
